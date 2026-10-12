@@ -1,6 +1,4 @@
-/* Authorized Protocol Quality Assurance & Formal Verification Engine */
-
-import { AetherGuardClient, type InvariantPolicy, InvariantViolationError } from "@aetherguard/sdk";
+import { AetherGuardClient, type InvariantPolicy, InvariantViolationError } from "aetherguard-sdk";
 
 export interface ElizaPluginAction {
   name: string;

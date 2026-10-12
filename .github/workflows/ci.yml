@@ -30,6 +30,6 @@ jobs:
         run: bun test
       - name: Build Packages
         run: |
-          bun run --filter @aetherguard/sdk build
+          bun run --filter aetherguard-sdk build
           bun run --filter aetherguard-mcp build
-          bun run --filter @aetherguard/eliza-plugin build
+          bun run --filter aetherguard-eliza-plugin build

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* Authorized Protocol Quality Assurance & Formal Verification Engine */
 
-import { AetherGuardClient, type InvariantPolicy, InvariantViolationError } from "@aetherguard/sdk";
+import { AetherGuardClient, type InvariantPolicy, InvariantViolationError } from "aetherguard-sdk";
 import * as readline from "node:readline";
 
 const defaultPolicy: InvariantPolicy = {

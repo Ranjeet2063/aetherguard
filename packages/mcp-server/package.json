@@ -19,6 +19,6 @@
     "start": "node ./dist/index.js"
   },
   "dependencies": {
-    "@aetherguard/sdk": "workspace:*"
+    "aetherguard-sdk": "workspace:*"
   }
 }

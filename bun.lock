@@ -6,10 +6,10 @@
       "name": "aetherguard-monorepo",
     },
     "packages/eliza-plugin": {
-      "name": "@aetherguard/eliza-plugin",
+      "name": "aetherguard-eliza-plugin",
       "version": "0.1.0",
       "dependencies": {
-        "@aetherguard/sdk": "workspace:*",
+        "aetherguard-sdk": "workspace:*",
       },
     },
     "packages/mcp-server": {
@@ -19,11 +19,11 @@
         "aetherguard-mcp": "./dist/index.js",
       },
       "dependencies": {
-        "@aetherguard/sdk": "workspace:*",
+        "aetherguard-sdk": "workspace:*",
       },
     },
     "packages/sdk": {
-      "name": "@aetherguard/sdk",
+      "name": "aetherguard-sdk",
       "version": "0.1.0",
       "devDependencies": {
         "@types/node": "^22.0.0",
@@ -32,13 +32,13 @@
     },
   },
   "packages": {
-    "@aetherguard/eliza-plugin": ["@aetherguard/eliza-plugin@workspace:packages/eliza-plugin"],
-
-    "@aetherguard/sdk": ["@aetherguard/sdk@workspace:packages/sdk"],
-
     "@types/node": ["@types/node@22.20.5", "", { "dependencies": { "undici-types": "~6.21.0" } }, "sha512-U2+DNr+wSjpsTS/wZGYHq7GcwfuSmKiKvoPvK22zwTlRhU91yOniN4qRR5KhIjvif7ysw/dz/hKmfDH0Ris4aA=="],
 
+    "aetherguard-eliza-plugin": ["aetherguard-eliza-plugin@workspace:packages/eliza-plugin"],
+
     "aetherguard-mcp": ["aetherguard-mcp@workspace:packages/mcp-server"],
+
+    "aetherguard-sdk": ["aetherguard-sdk@workspace:packages/sdk"],
 
     "typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
 

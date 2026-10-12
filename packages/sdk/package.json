@@ -1,5 +1,5 @@
 {
-  "name": "@aetherguard/sdk",
+  "name": "aetherguard-sdk",
   "version": "0.1.0",
   "description": "High-Performance Mathematical Invariant Firewall & Financial OS SDK for Autonomous AI Agents",
   "main": "dist/index.js",

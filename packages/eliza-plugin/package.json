@@ -1,8 +1,17 @@
 {
-  "name": "@aetherguard/eliza-plugin",
+  "name": "aetherguard-eliza-plugin",
   "version": "0.1.0",
   "description": "ElizaOS Official Mathematical Invariant Firewall & Safety Plugin for Autonomous AI Agents",
   "main": "dist/index.js",
+  "keywords": [
+    "elizaos",
+    "eliza-plugin",
+    "ai-agents",
+    "stellar",
+    "soroban",
+    "security",
+    "firewall"
+  ],
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "author": "Ranjeet Kumar Sah <ranjeet2063@users.noreply.github.com>",

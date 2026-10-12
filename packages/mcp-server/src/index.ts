@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /* Authorized Protocol Quality Assurance & Formal Verification Engine */
 
 import { AetherGuardClient, type InvariantPolicy, InvariantViolationError } from "@aetherguard/sdk";

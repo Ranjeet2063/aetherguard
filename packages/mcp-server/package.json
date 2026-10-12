@@ -1,6 +1,7 @@
 {
   "name": "aetherguard-mcp",
   "version": "0.1.0",
+  "type": "module",
   "description": "Anthropic Model Context Protocol (MCP) Server for Mathematical Invariant Web3 AI Firewall",
   "main": "dist/index.js",
   "bin": {

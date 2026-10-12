@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  rust-tests:
+    name: Rust Invariant Suite & Enclave Verification
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Run Cargo Tests
+        run: cargo test --all --verbose
+
+  typescript-tests:
+    name: TypeScript SDK & MCP Server Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Install dependencies
+        run: bun install
+      - name: Run Tests
+        run: bun test
+      - name: Build Packages
+        run: |
+          bun run --filter @aetherguard/sdk build
+          bun run --filter aetherguard-mcp build
+          bun run --filter @aetherguard/eliza-plugin build

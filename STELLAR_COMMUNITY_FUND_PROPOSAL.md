@@ -62,33 +62,30 @@ AetherGuard provides an end-to-end mathematical security layer consisting of:
 
 ---
 
-## 🗺️ Roadmap & Milestones ($100,000 USDC)
+## 🗺️ Roadmap & Tranche Structure ($100,000 USDC)
 
-### Milestone 1: Core Engine & Formal Verification ($25,000 USDC)
-* [x] Rust Invariant Engine (`aetherguard-core`) with velocity caps and balance floors.
-* [x] Hardware/Isolated Ed25519 Signing Enclave with cryptographic attestation proofs.
-* [ ] Formal Verification test suite with Kani proofs demonstrating zero-breach mathematical invariants.
-* [ ] Soroban testnet smart account contract deployment.
-* *Deliverables*: Open-source crates, 100% passing automated test suite, formal verification report.
+Aligned strictly with official Stellar Community Fund (SCF) 3-Tranche Build Award Guidelines:
 
-### Milestone 2: ElizaOS & Anthropic Ecosystem Integration ($25,000 USDC)
-* [x] TypeScript SDK (`@aetherguard/sdk`) published on NPM.
-* [x] ElizaOS Safety Plugin (`@aetherguard/eliza-plugin`).
-* [x] Model Context Protocol Server (`aetherguard-mcp`).
-* [ ] Upstream PR submission and merge into `elizaOS/eliza` develop branch.
-* *Deliverables*: Merged upstream ElizaOS PR, MCP server registered in Anthropic registry, comprehensive docs.
+### 🔹 Tranche 1: MVP & Core Invariant Engine ($30,000 USDC)
+* **Deliverable 1.1: High-Performance Rust Invariant Engine (`aetherguard-core`)**: Completed sliding-window velocity throttling, per-tx spend ceilings, balance floor invariants, and zero-leak Ed25519 memory vault.
+* **Deliverable 1.2: Multi-Ecosystem Developer Tooling**: Complete `@aetherguard/sdk` (TypeScript/Bun), `@aetherguard/eliza-plugin` (ElizaOS), and `aetherguard-mcp` (Anthropic Model Context Protocol Server).
+* **Deliverable 1.3: Soroban Smart Account Invariant Bindings (`aetherguard-soroban`)**: Soroban smart contract interface implementing atomic invariant validation and 0.05% protocol micro-fee routing.
+* **Deliverable 1.4: Unit & Integration Test Suite**: 100% green automated test suite across Rust crates and TypeScript packages demonstrating prompt-injection interception.
+* *Review Verification*: Public GitHub repository, passing `cargo test --all` and `bun test`, interactive CLI demo (`cargo run -p aetherguard-cli -- demo`).
 
-### Milestone 3: Soroban DEX Integrations & Operator Dashboard ($25,000 USDC)
-* [ ] Native transaction simulation adapters for Soroban DEXs (Phoenix, Soroswap).
-* [ ] Web-based Operator Dashboard for setting agent invariant policies, monitoring real-time spend velocity, and triggering emergency pauses.
-* [ ] Interactive CLI demo for instant developer onboarding.
-* *Deliverables*: Live web dashboard, DEX adapters, public testnet deployment.
+### 🔹 Tranche 2: Testnet Deployment, STRIDE Threat Model & Observability ($35,000 USDC)
+* **Deliverable 2.1: Formal STRIDE Threat Model & On-Chain Monitoring Plan**: Complete security specification per Stellar Developer Guidelines detailing adversary prompt-injection models, state desynchronization defenses, and real-time ledger alert hooks.
+* **Deliverable 2.2: Soroban Testnet Contract Deployment**: Live Soroban testnet smart account deployment supporting multi-agent policy registers and invariant event streaming.
+* **Deliverable 2.3: Web-Based Invariant Governance Dashboard**: Live web interface for agent owners to set velocity caps, monitor real-time wallet flows, and trigger one-click emergency circuit-breakers.
+* **Deliverable 2.4: Upstream Ecosystem Integrations**: Merged MCP registry integration and upstream PR to ElizaOS monorepo.
+* *Review Verification*: Live Soroban testnet contract IDs, published Threat Model & Monitoring Plan document, working web dashboard URL, merged ecosystem PRs.
 
-### Milestone 4: Security Audit & Mainnet Launch ($25,000 USDC)
-* [ ] Comprehensive smart contract security audit by an accredited Web3 security firm.
-* [ ] Mainnet deployment on Stellar public network.
-* [ ] Developer documentation portal and video workshops for the Stellar community.
-* *Deliverables*: Formal audit report, verified mainnet contract addresses, public documentation hub.
+### 🔹 Tranche 3: Mainnet Launch, Security Audit & Ecosystem Scale ($35,000 USDC)
+* **Deliverable 3.1: External Smart Contract Security Audit**: Comprehensive third-party security verification of Soroban smart accounts and enclave attestation logic with published report.
+* **Deliverable 3.2: Production Mainnet Deployment on Stellar**: Canonical deployment of AetherGuard on Stellar Public Network with multi-sig admin governance and initial liquidity seed.
+* **Deliverable 3.3: Soroban DEX Integrations**: Native liquidity guard adapters for Soroban DEXs (Phoenix, Soroswap, Blend) to enable safe 24/7 autonomous trading.
+* **Deliverable 3.4: Developer Documentation Hub & Video Tutorials**: Interactive documentation, cookbook examples for ElizaOS/Claude agents, and community workshop.
+* *Review Verification*: Verified mainnet Soroban contract addresses, published audit report, live docs portal, on-chain transaction volume.
 
 ---
 

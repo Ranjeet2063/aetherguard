@@ -1,0 +1,23 @@
+{
+  "name": "aetherguard-mcp",
+  "version": "0.1.0",
+  "description": "Anthropic Model Context Protocol (MCP) Server for Mathematical Invariant Web3 AI Firewall",
+  "main": "dist/index.js",
+  "bin": {
+    "aetherguard-mcp": "./dist/index.js"
+  },
+  "author": "Ranjeet Kumar Sah <ranjeet2063@users.noreply.github.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Ranjeet2063/aetherguard.git",
+    "directory": "packages/mcp-server"
+  },
+  "license": "MIT OR Apache-2.0",
+  "scripts": {
+    "build": "bun build ./src/index.ts --outdir ./dist --target node",
+    "start": "node ./dist/index.js"
+  },
+  "dependencies": {
+    "@aetherguard/sdk": "workspace:*"
+  }
+}

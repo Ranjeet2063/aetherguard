@@ -1,0 +1,34 @@
+{
+  "name": "@aetherguard/sdk",
+  "version": "0.1.0",
+  "description": "High-Performance Mathematical Invariant Firewall & Financial OS SDK for Autonomous AI Agents",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "author": "Ranjeet Kumar Sah <ranjeet2063@users.noreply.github.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Ranjeet2063/aetherguard.git",
+    "directory": "packages/sdk"
+  },
+  "homepage": "https://github.com/Ranjeet2063/aetherguard",
+  "keywords": [
+    "ai-agents",
+    "security",
+    "web3",
+    "soroban",
+    "stellar",
+    "formal-verification",
+    "firewall",
+    "elizaos"
+  ],
+  "license": "MIT OR Apache-2.0",
+  "scripts": {
+    "build": "bun build ./src/index.ts --outdir ./dist --target node",
+    "test": "bun test"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}

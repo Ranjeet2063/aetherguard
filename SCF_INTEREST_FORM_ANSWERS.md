@@ -36,10 +36,14 @@ Developer Tooling / Infrastructure & Security
 ```text
 - Working Monorepo & Core Engine: Fully implemented pure Rust invariant engine (`aetherguard-core`), Soroban smart account state bindings (`aetherguard-soroban`), and interactive demo CLI (`aetherguard-cli`).
 - Automated CI: 100% passing automated test suite running on GitHub Actions (Rust unit tests, Bun test suite, typechecking, and container build).
-- Multi-Ecosystem Bridges:
-  1. `@aetherguard/sdk`: TypeScript/Bun SDK with instant verification digest generation.
-  2. `aetherguard-mcp`: Anthropic Model Context Protocol server exposing `evaluate_agent_proposal` & `get_firewall_status` via stdio JSON-RPC 2.0 with Dockerfile.
-  3. Upstream ElizaOS Integration: Pull Request #35834 submitted to elizaOS/eliza (19,500+ stars) registering `@aetherguard/eliza-plugin` in the official community plugin registry.
+- Published Production Packages on NPM Registry:
+  1. `aetherguard-sdk` (v0.1.0): TypeScript/Bun SDK with instant verification digest generation (https://www.npmjs.com/package/aetherguard-sdk).
+  2. `aetherguard-mcp` (v0.1.0): Anthropic Model Context Protocol server executable via `npx aetherguard-mcp` with Dockerfile (https://www.npmjs.com/package/aetherguard-mcp).
+  3. `aetherguard-eliza-plugin` (v0.1.0): ElizaOS safety plugin tagged for autonomous agent autodiscovery (https://www.npmjs.com/package/aetherguard-eliza-plugin).
+- Official GitHub Release v0.1.0: Standalone compiled Linux x86_64 binary release with SHA-256 verification (https://github.com/Ranjeet2063/aetherguard/releases/tag/v0.1.0).
+- Upstream Ecosystem PRs:
+  - ElizaOS (19.5k+ stars): PR #35834 submitted and code approved by reviewer `mtcow`.
+  - Awesome MCP Servers (12k+ stars): PR #16256 live for official Anthropic ecosystem directory listing.
 - Founder Track Record: Lead architect with 166+ merged PRs across open-source Web3/AI, Tenstorrent (Jim Keller's silicon compiler), and 22 merged PRs in Soroban smart contract projects.
 - GitHub Repository: https://github.com/Ranjeet2063/aetherguard
 ```

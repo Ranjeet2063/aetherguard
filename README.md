@@ -10,9 +10,12 @@
 
 <p align="center">
   <a href="https://github.com/Ranjeet2063/aetherguard/actions"><img src="https://img.shields.io/badge/CI-100%25%20Passing-brightgreen?style=for-the-badge&logo=githubactions&logoColor=white" /></a>
+  <a href="https://github.com/Ranjeet2063/aetherguard/releases/tag/v0.1.0"><img src="https://img.shields.io/badge/Release-v0.1.0-blue?style=for-the-badge&logo=github&logoColor=white" /></a>
+  <a href="https://www.npmjs.com/package/aetherguard-sdk"><img src="https://img.shields.io/badge/npm-aetherguard--sdk-red?style=for-the-badge&logo=npm&logoColor=white" /></a>
+  <a href="https://www.npmjs.com/package/aetherguard-mcp"><img src="https://img.shields.io/badge/npm-aetherguard--mcp-cb3837?style=for-the-badge&logo=npm&logoColor=white" /></a>
+  <a href="https://www.npmjs.com/package/aetherguard-eliza-plugin"><img src="https://img.shields.io/badge/npm-aetherguard--eliza--plugin-purple?style=for-the-badge&logo=npm&logoColor=white" /></a>
   <a href="https://www.rust-lang.org/"><img src="https://img.shields.io/badge/Language-Pure%20Rust-orange?style=for-the-badge&logo=rust&logoColor=white" /></a>
   <a href="https://stellar.org/"><img src="https://img.shields.io/badge/Blockchain-Stellar%20%2F%20Soroban-black?style=for-the-badge&logo=stellar&logoColor=white" /></a>
-  <a href="https://github.com/elizaOS/eliza"><img src="https://img.shields.io/badge/Compatibility-ElizaOS%20%7C%20MCP-purple?style=for-the-badge&logo=openai&logoColor=white" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-blue?style=for-the-badge" /></a>
 </p>
 
@@ -112,7 +115,39 @@ cargo run -p aetherguard-cli -- demo
 
 ---
 
-## 📦 Workspace Crates
+## 📦 Packages & Distribution (Published Live)
+
+| Package | Ecosystem | Install Command | Live Registry |
+|---|---|---|---|
+| [`aetherguard-sdk`](packages/sdk) | TypeScript / Bun / Node | `npm i aetherguard-sdk` | [![npm](https://img.shields.io/npm/v/aetherguard-sdk?color=red)](https://www.npmjs.com/package/aetherguard-sdk) |
+| [`aetherguard-mcp`](packages/mcp-server) | Claude / Cursor / MCP | `npx aetherguard-mcp` | [![npm](https://img.shields.io/npm/v/aetherguard-mcp?color=cb3837)](https://www.npmjs.com/package/aetherguard-mcp) |
+| [`aetherguard-eliza-plugin`](packages/eliza-plugin) | ElizaOS Autonomous Agents | `npm i aetherguard-eliza-plugin` | [![npm](https://img.shields.io/npm/v/aetherguard-eliza-plugin?color=purple)](https://www.npmjs.com/package/aetherguard-eliza-plugin) |
+| [`aetherguard-cli`](crates/aetherguard-cli) | Linux x86_64 Binary | [Download v0.1.0](https://github.com/Ranjeet2063/aetherguard/releases/tag/v0.1.0) | [![Release](https://img.shields.io/github/v/release/Ranjeet2063/aetherguard?color=blue)](https://github.com/Ranjeet2063/aetherguard/releases) |
+
+### Quick Integration Examples
+
+#### 1. Claude Desktop / Cursor MCP Config (`claude_desktop_config.json`)
+```json
+{
+  "mcpServers": {
+    "aetherguard": {
+      "command": "npx",
+      "args": ["-y", "aetherguard-mcp"]
+    }
+  }
+}
+```
+
+#### 2. ElizaOS Agent Character (`character.json`)
+```json
+{
+  "plugins": ["aetherguard-eliza-plugin"]
+}
+```
+
+---
+
+## 🦀 Workspace Crates (Rust)
 
 | Crate | Purpose | Language |
 |---|---|---|

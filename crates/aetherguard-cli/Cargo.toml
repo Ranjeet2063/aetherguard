@@ -1,0 +1,21 @@
+[package]
+name = "aetherguard-cli"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "aetherguard"
+path = "src/main.rs"
+
+[dependencies]
+aetherguard-core = { path = "../aetherguard-core" }
+aetherguard-soroban = { path = "../aetherguard-soroban" }
+serde.workspace = true
+serde_json.workspace = true
+clap.workspace = true
+colored.workspace = true
+chrono.workspace = true
+hex.workspace = true

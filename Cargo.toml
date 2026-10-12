@@ -1,0 +1,29 @@
+[workspace]
+members = [
+    "crates/aetherguard-core",
+    "crates/aetherguard-cli",
+    "crates/aetherguard-soroban",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+authors = ["Ranjeet Kumar Sah <ranjeet2063@users.noreply.github.com>"]
+edition = "2021"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/Ranjeet2063/aetherguard"
+homepage = "https://github.com/Ranjeet2063/aetherguard"
+keywords = ["ai-agents", "security", "formal-verification", "soroban", "crypto-firewall"]
+categories = ["cryptography", "web3", "ai"]
+
+[workspace.dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "2.0"
+chrono = { version = "0.4", features = ["serde"] }
+sha2 = "0.10"
+ed25519-dalek = { version = "2.1", features = ["rand_core"] }
+rand = "0.8"
+clap = { version = "4.5", features = ["derive"] }
+colored = "2.1"
+hex = "0.4"

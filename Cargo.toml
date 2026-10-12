@@ -3,6 +3,7 @@ members = [
     "crates/aetherguard-core",
     "crates/aetherguard-cli",
     "crates/aetherguard-soroban",
+    "contracts/aetherguard-contract",
 ]
 resolver = "2"
 
@@ -27,3 +28,11 @@ rand = "0.8"
 clap = { version = "4.5", features = ["derive"] }
 colored = "2.1"
 hex = "0.4"
+
+[profile.release]
+opt-level = "z"
+overflow-checks = true
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

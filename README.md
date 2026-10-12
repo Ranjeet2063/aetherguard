@@ -15,9 +15,12 @@
   <a href="https://www.npmjs.com/package/aetherguard-mcp"><img src="https://img.shields.io/badge/npm-aetherguard--mcp-cb3837?style=for-the-badge&logo=npm&logoColor=white" /></a>
   <a href="https://www.npmjs.com/package/aetherguard-eliza-plugin"><img src="https://img.shields.io/badge/npm-aetherguard--eliza--plugin-purple?style=for-the-badge&logo=npm&logoColor=white" /></a>
   <a href="https://www.rust-lang.org/"><img src="https://img.shields.io/badge/Language-Pure%20Rust-orange?style=for-the-badge&logo=rust&logoColor=white" /></a>
-  <a href="https://stellar.org/"><img src="https://img.shields.io/badge/Blockchain-Stellar%20%2F%20Soroban-black?style=for-the-badge&logo=stellar&logoColor=white" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-blue?style=for-the-badge" /></a>
 </p>
+
+> 🌐 **Live Web Playground**: [https://ranjeet2063.github.io/aetherguard](https://ranjeet2063.github.io/aetherguard)  
+> 🏛️ **Live Soroban Testnet Contract**: [`CCBUTMN6U7VKUAXAPMZXSQQW4LBJKHNEYBRGXPIY6CMO2O5WNC6TV7NP`](https://stellar.expert/explorer/testnet/contract/CCBUTMN6U7VKUAXAPMZXSQQW4LBJKHNEYBRGXPIY6CMO2O5WNC6TV7NP)  
+> 🔗 **Verified Deployment Tx**: [`2f93c86a6c52929d96d1ac514cc5e4322479e3429daae26799bdef6637932034`](https://stellar.expert/explorer/testnet/tx/2f93c86a6c52929d96d1ac514cc5e4322479e3429daae26799bdef6637932034)
 
 ---
 
@@ -152,6 +155,7 @@ cargo run -p aetherguard-cli -- demo
 | Crate | Purpose | Language |
 |---|---|---|
 | [`aetherguard-core`](crates/aetherguard-core) | Mathematical invariant engine, policy definitions, Ed25519 enclave key vault | Pure Rust (`no_std` ready) |
+| [`aetherguard-contract`](contracts/aetherguard-contract) | On-chain Soroban smart contract with micro-fee routing & event emissions | Rust (`soroban-sdk`) |
 | [`aetherguard-soroban`](crates/aetherguard-soroban) | Stellar/Soroban on-chain storage representations and protocol fee economics | Rust |
 | [`aetherguard-cli`](crates/aetherguard-cli) | Cinematic terminal visualization, simulation engine, and policy exporter | Rust (Clap) |
 

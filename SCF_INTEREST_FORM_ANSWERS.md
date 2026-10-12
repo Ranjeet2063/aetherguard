@@ -34,7 +34,13 @@ Developer Tooling / Infrastructure & Security
 
 ### 4. Current Traction
 ```text
-- Working Monorepo & Core Engine: Fully implemented pure Rust invariant engine (`aetherguard-core`), Soroban smart account state bindings (`aetherguard-soroban`), and interactive demo CLI (`aetherguard-cli`).
+- Live Soroban Smart Contract Deployed on Testnet:
+  - Contract ID: CCBUTMN6U7VKUAXAPMZXSQQW4LBJKHNEYBRGXPIY6CMO2O5WNC6TV7NP
+  - Explorer Verification: https://stellar.expert/explorer/testnet/contract/CCBUTMN6U7VKUAXAPMZXSQQW4LBJKHNEYBRGXPIY6CMO2O5WNC6TV7NP
+  - Deployment Tx: 2f93c86a6c52929d96d1ac514cc5e4322479e3429daae26799bdef6637932034
+  - Optimized WASM size: 7.9 KB with 0.05% protocol micro-fee routing & event emissions.
+- Live Interactive Web Playground: https://ranjeet2063.github.io/aetherguard
+- Working Monorepo & Core Engine: Fully implemented pure Rust invariant engine (`aetherguard-core`), on-chain Soroban contract (`aetherguard-contract`), Soroban state bindings (`aetherguard-soroban`), and interactive demo CLI (`aetherguard-cli`).
 - Automated CI: 100% passing automated test suite running on GitHub Actions (Rust unit tests, Bun test suite, typechecking, and container build).
 - Published Production Packages on NPM Registry:
   1. `aetherguard-sdk` (v0.1.0): TypeScript/Bun SDK with instant verification digest generation (https://www.npmjs.com/package/aetherguard-sdk).
@@ -52,7 +58,9 @@ Developer Tooling / Infrastructure & Security
 
 ### 5. Website / Repository URL
 ```text
-https://github.com/Ranjeet2063/aetherguard
+Website & Web Playground: https://ranjeet2063.github.io/aetherguard
+Repository: https://github.com/Ranjeet2063/aetherguard
+Testnet Contract: https://stellar.expert/explorer/testnet/contract/CCBUTMN6U7VKUAXAPMZXSQQW4LBJKHNEYBRGXPIY6CMO2O5WNC6TV7NP
 ```
 
 ---

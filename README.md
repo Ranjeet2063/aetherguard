@@ -196,14 +196,22 @@ Architected with mathematical rigor by:
 
 ---
 
-## 🤝 Join the Developer Community & Contribute
+## 🤝 Join the Developer Community & Contribute (50+ Open Issues!)
 
-We are building the future of autonomous agent financial safety on Stellar. Whether you are a Rust systems engineer, Python AI builder, or frontend creator, we welcome your contributions!
+We are building the open-source future of autonomous agent financial safety on Stellar & Soroban. We have opened **50 curated, beginner-to-intermediate issues** ready for contributors worldwide!
 
-- 🚀 **Find Beginner-Friendly Tasks**: Browse actively curated [Good First Issues](https://github.com/Ranjeet2063/aetherguard/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
-- 📖 **Contribution Guidelines**: Read our complete setup and workflow guide in [`CONTRIBUTING.md`](CONTRIBUTING.md).
-- ⚡ **24-Hour PR Review SLA**: All contributor pull requests are reviewed, verified, and merged promptly by maintainers.
-- 🏆 **Wall of Fame**: Contributors are permanently credited on the repository and release notes.
+### 🎯 Pick an Issue by Category:
+- 🦀 **Rust Core & Soroban Contracts** ([Browse Issues](https://github.com/Ranjeet2063/aetherguard/issues?q=is%3Aissue+is%3Aopen+label%3Arust)): Invariants, replay protection, oracle deviation guards, and event logging.
+- 🐍 **Python SDK & AI Agent Middleware** ([Browse Issues](https://github.com/Ranjeet2063/aetherguard/issues?q=is%3Aissue+is%3Aopen+label%3Apython)): FastAPI middleware, CrewAI, AutoGPT, LlamaIndex, and Pydantic schemas.
+- ⚡ **TypeScript / ElizaOS / MCP** ([Browse Issues](https://github.com/Ranjeet2063/aetherguard/issues?q=is%3Aissue+is%3Aopen+label%3Atypescript)): ElizaOS plugins, Model Context Protocol server, Freighter wallet adapters.
+- 🖥️ **CLI & Developer Tools** ([Browse Issues](https://github.com/Ranjeet2063/aetherguard/issues?q=is%3Aissue+is%3Aopen+label%3Acli)): Interactive wizards (`aetherguard init`), policy linters, and transaction replay.
+- 📚 **Documentation & Cookbooks** ([Browse Issues](https://github.com/Ranjeet2063/aetherguard/issues?q=is%3Aissue+is%3Aopen+label%3Adocumentation)): Quickstarts, sandwich attack analysis, and multi-language translations (Spanish & Hindi).
+- 🌟 **All Good First Issues** ([Browse 40+ Beginner Tasks](https://github.com/Ranjeet2063/aetherguard/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22))
+
+### ⚡ Maintainer Commitments:
+- ⏱️ **24-Hour Review SLA**: Maintainers review and give feedback on PRs within 24 hours.
+- 🏆 **Wall of Fame & Gold Stars**: Every contributor is permanently recognized in our README and releases.
+- 📖 **Quick Setup**: Read our step-by-step onboarding guide in [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ---
 

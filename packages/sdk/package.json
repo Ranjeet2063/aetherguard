@@ -5,6 +5,13 @@
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./src/index.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "author": "Ranjeet Kumar Sah <ranjeet2063@users.noreply.github.com>",
   "repository": {
     "type": "git",

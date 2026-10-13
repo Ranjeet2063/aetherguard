@@ -33,3 +33,21 @@ jobs:
           bun run --filter aetherguard-sdk build
           bun run --filter aetherguard-mcp build
           bun run --filter aetherguard-eliza-plugin build
+
+  python-tests:
+    name: Python SDK & Agent Integrations Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run Python Invariant Tests
+        run: |
+          cd packages/python
+          python -m unittest discover tests
+      - name: Run Python Examples Verification
+        run: |
+          python packages/python/examples/basic_usage.py
+          python packages/python/examples/langchain_agent.py
+          python packages/python/examples/crewai_guard.py

@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aetherguard"
+version = "0.1.0"
+description = "Mathematical Invariant Firewall and Financial OS for Autonomous AI Agents"
+readme = "README.md"
+authors = [{ name = "Ranjeet2063", email = "ranjeet2063@users.noreply.github.com" }]
+license = { text = "MIT" }
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Security :: Cryptography",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence"
+]
+requires-python = ">=3.9"
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/Ranjeet2063/aetherguard"
+Repository = "https://github.com/Ranjeet2063/aetherguard"
+Documentation = "https://github.com/Ranjeet2063/aetherguard/blob/main/STRIDE_THREAT_MODEL.md"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["aetherguard*"]

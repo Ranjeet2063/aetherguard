@@ -39,13 +39,15 @@ Developer Tooling / Infrastructure & Security
   - Explorer Verification: https://stellar.expert/explorer/testnet/contract/CCBUTMN6U7VKUAXAPMZXSQQW4LBJKHNEYBRGXPIY6CMO2O5WNC6TV7NP
   - Deployment Tx: 2f93c86a6c52929d96d1ac514cc5e4322479e3429daae26799bdef6637932034
   - Optimized WASM size: 7.9 KB with 0.05% protocol micro-fee routing & event emissions.
-- Live Interactive Web Playground: https://ranjeet2063.github.io/aetherguard
-- Working Monorepo & Core Engine: Fully implemented pure Rust invariant engine (`aetherguard-core`), on-chain Soroban contract (`aetherguard-contract`), Soroban state bindings (`aetherguard-soroban`), and interactive demo CLI (`aetherguard-cli`).
-- Automated CI: 100% passing automated test suite running on GitHub Actions (Rust unit tests, Bun test suite, typechecking, and container build).
-- Published Production Packages on NPM Registry:
-  1. `aetherguard-sdk` (v0.1.0): TypeScript/Bun SDK with instant verification digest generation (https://www.npmjs.com/package/aetherguard-sdk).
-  2. `aetherguard-mcp` (v0.1.0): Anthropic Model Context Protocol server executable via `npx aetherguard-mcp` with Dockerfile (https://www.npmjs.com/package/aetherguard-mcp).
-  3. `aetherguard-eliza-plugin` (v0.1.0): ElizaOS safety plugin tagged for autonomous agent autodiscovery (https://www.npmjs.com/package/aetherguard-eliza-plugin).
+- Live Interactive Web Playground: https://ranjeet2063.github.io/aetherguard (Includes live Freighter Wallet extension detection, public key display, and simulated testnet fallback).
+- Formal STRIDE Security Threat Model: https://github.com/Ranjeet2063/aetherguard/blob/main/STRIDE_THREAT_MODEL.md (Microsoft STRIDE matrix tailored to autonomous agents holding keys + Ramanujan axiomatic mathematical proofs).
+- Working Monorepo & Multi-Stack SDKs: Fully implemented pure Rust invariant engine (`aetherguard-core`), on-chain Soroban contract (`aetherguard-contract`), Soroban state bindings (`aetherguard-soroban`), and interactive demo CLI (`aetherguard-cli`).
+- Automated CI: 100% passing automated test suite running on GitHub Actions across Rust, TypeScript, and Python 3.12 (unit tests, Bun test suite, Python test discovery, typechecking, and container build).
+- Published Production Packages & Python SDK:
+  1. `aetherguard` (Python SDK v0.1.0): Zero-dependency Python SDK with native LangChain, CrewAI, LlamaIndex, and AutoGPT integrations (`packages/python`).
+  2. `aetherguard-sdk` (v0.1.0): TypeScript/Bun SDK with instant verification digest generation (https://www.npmjs.com/package/aetherguard-sdk).
+  3. `aetherguard-mcp` (v0.1.0): Anthropic Model Context Protocol server executable via `npx aetherguard-mcp` with Dockerfile (https://www.npmjs.com/package/aetherguard-mcp).
+  4. `aetherguard-eliza-plugin` (v0.1.0): ElizaOS safety plugin tagged for autonomous agent autodiscovery (https://www.npmjs.com/package/aetherguard-eliza-plugin).
 - Official GitHub Release v0.1.0: Standalone compiled Linux x86_64 binary release with SHA-256 verification (https://github.com/Ranjeet2063/aetherguard/releases/tag/v0.1.0).
 - Upstream Ecosystem PRs:
   - ElizaOS (19.5k+ stars): PR #35834 submitted and code approved by reviewer `mtcow`.

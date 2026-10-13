@@ -48,6 +48,7 @@ AetherGuard provides an end-to-end mathematical security layer consisting of:
 * Sustainable 0.05% protocol micro-fee configuration to support long-term protocol maintenance.
 
 ### 3. Developer Bridges (Instant Ecosystem Adoption)
+* **`aetherguard` (Python SDK)**: Native bindings and tool decorators for Python AI agents (LangChain, CrewAI, LlamaIndex, AutoGPT).
 * **`@aetherguard/sdk` (TypeScript)**: 1-line plug-and-play integration for Node.js, Bun, and browser apps.
 * **`@aetherguard/eliza-plugin`**: Native plugin ready for direct integration into ElizaOS (19.5k+ stars on GitHub).
 * **`aetherguard-mcp`**: Anthropic Model Context Protocol server enabling Claude, Cursor, and Antigravity to simulate and guard transactions natively.
@@ -68,10 +69,10 @@ Aligned strictly with official Stellar Community Fund (SCF) 3-Tranche Build Awar
 
 ### 🔹 Tranche 1: MVP & Core Invariant Engine ($30,000 USDC)
 * **Deliverable 1.1: High-Performance Rust Invariant Engine (`aetherguard-core`)**: Completed sliding-window velocity throttling, per-tx spend ceilings, balance floor invariants, and zero-leak Ed25519 memory vault.
-* **Deliverable 1.2: Multi-Ecosystem Developer Tooling**: Complete `@aetherguard/sdk` (TypeScript/Bun), `@aetherguard/eliza-plugin` (ElizaOS), and `aetherguard-mcp` (Anthropic Model Context Protocol Server).
+* **Deliverable 1.2: Multi-Ecosystem Developer Tooling**: Complete `aetherguard-py` (Python SDK with LangChain, CrewAI, LlamaIndex, and AutoGPT), `@aetherguard/sdk` (TypeScript/Bun), `@aetherguard/eliza-plugin` (ElizaOS), and `aetherguard-mcp` (Anthropic Model Context Protocol Server).
 * **Deliverable 1.3: Soroban Smart Account Invariant Bindings (`aetherguard-soroban`)**: Soroban smart contract interface implementing atomic invariant validation and 0.05% protocol micro-fee routing.
-* **Deliverable 1.4: Unit & Integration Test Suite**: 100% green automated test suite across Rust crates and TypeScript packages demonstrating prompt-injection interception.
-* *Review Verification*: Public GitHub repository, passing `cargo test --all` and `bun test`, interactive CLI demo (`cargo run -p aetherguard-cli -- demo`).
+* **Deliverable 1.4: Unit & Integration Test Suite**: 100% green automated test suite across Rust crates, TypeScript packages, and Python SDK demonstrating prompt-injection interception.
+* *Review Verification*: Public GitHub repository, passing `cargo test --all`, `bun test`, and `python -m unittest discover tests`, interactive CLI demo (`cargo run -p aetherguard-cli -- demo`), and live Soroban RPC script.
 
 ### 🔹 Tranche 2: Testnet Deployment, STRIDE Threat Model & Observability ($35,000 USDC)
 * **Deliverable 2.1: Formal STRIDE Threat Model & On-Chain Monitoring Plan**: Complete security specification per Stellar Developer Guidelines detailing adversary prompt-injection models, state desynchronization defenses, and real-time ledger alert hooks.

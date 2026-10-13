@@ -51,3 +51,5 @@ jobs:
           python packages/python/examples/basic_usage.py
           python packages/python/examples/langchain_agent.py
           python packages/python/examples/crewai_guard.py
+          python packages/python/examples/llamaindex_agent.py
+          python packages/python/examples/live_soroban_rpc_demo.py

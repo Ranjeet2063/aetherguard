@@ -115,6 +115,25 @@ is_safe = guard.verify_action(
 )
 ```
 
+### LlamaIndex Tools
+
+```python
+from aetherguard.integrations import guard_llamaindex_tool
+
+@guard_llamaindex_tool(client=client, balance_provider=get_wallet_balance)
+def retrieve_and_pay(chunk_id: str, recipient: str, amount: int):
+    return pay_oracle_for_chunk(chunk_id, recipient, amount)
+```
+
+### AutoGPT Command Interceptor
+
+```python
+from aetherguard.integrations import AutoGPTGuard
+
+guard = AutoGPTGuard(client, balance_provider=get_wallet_balance)
+is_allowed = guard.intercept_command("pay_vendor", {"recipient": "GBXY...", "amount": 1000})
+```
+
 ---
 
 ## 🧪 Testing

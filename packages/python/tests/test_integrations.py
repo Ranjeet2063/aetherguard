@@ -70,6 +70,44 @@ class TestIntegrations(unittest.TestCase):
             )
         self.assertIn("UNAUTHORIZED_RECIPIENT", str(ctx.exception))
 
+    def test_llamaindex_guard(self):
+        from aetherguard.integrations import guard_llamaindex_tool
+
+        @guard_llamaindex_tool(
+            client=self.client,
+            balance_provider=self.balance_provider,
+            catch_and_return_message=True,
+        )
+        def query_and_pay(recipient: str, amount: int):
+            return f"PAID_{amount}_TO_{recipient}"
+
+        # Safe payment
+        safe = query_and_pay(recipient="G_MERCHANT_CORP", amount=40)
+        self.assertEqual(safe, "PAID_40_TO_G_MERCHANT_CORP")
+
+        # Blocked payment (over cap 100)
+        blocked = query_and_pay(recipient="G_MERCHANT_CORP", amount=200)
+        self.assertIn("[AetherGuard Invariant Blocked]", blocked)
+
+    def test_autogpt_guard(self):
+        from aetherguard.integrations import AutoGPTGuard
+
+        guard = AutoGPTGuard(self.client, self.balance_provider)
+
+        # Compliant command
+        ok = guard.intercept_command(
+            command_name="execute_settlement",
+            arguments={"recipient": "G_MERCHANT_CORP", "amount": 30},
+        )
+        self.assertTrue(ok)
+
+        # Non-compliant command
+        with self.assertRaises(Exception):
+            guard.intercept_command(
+                command_name="execute_settlement",
+                arguments={"recipient": "G_MERCHANT_CORP", "amount": 400},
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

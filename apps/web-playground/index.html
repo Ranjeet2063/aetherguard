@@ -57,13 +57,20 @@
         </div>
       </div>
       
-      <div class="flex items-center space-x-4">
+      <div class="flex items-center space-x-3">
+        <a href="https://github.com/Ranjeet2063/aetherguard/blob/main/STRIDE_THREAT_MODEL.md" target="_blank" class="hidden sm:flex items-center gap-1.5 text-xs font-mono bg-guard-surface px-3 py-1.5 rounded-lg border border-guard-border text-slate-300 hover:border-sky-500 transition">
+          🛡️ STRIDE Security Spec
+        </a>
         <a href="https://stellar.expert/explorer/testnet/contract/CCBUTMN6U7VKUAXAPMZXSQQW4LBJKHNEYBRGXPIY6CMO2O5WNC6TV7NP" target="_blank" class="hidden md:flex items-center gap-2 text-xs font-mono bg-guard-surface px-3 py-1.5 rounded-lg border border-guard-border text-slate-300 hover:border-sky-500 transition">
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          Soroban Testnet: CCBUTM...7NP
+          Contract: CCBUTM...7NP
         </a>
-        <a href="https://github.com/Ranjeet2063/aetherguard" target="_blank" class="text-xs font-semibold px-4 py-2 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 transition font-mono">
-          ★ Star on GitHub
+        <button id="connectWalletBtn" onclick="toggleWalletConnection()" class="flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-mono transition border border-indigo-400/40">
+          <span id="walletDot" class="w-2 h-2 rounded-full bg-slate-400"></span>
+          <span id="walletBtnText">Connect Freighter</span>
+        </button>
+        <a href="https://github.com/Ranjeet2063/aetherguard" target="_blank" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 transition font-mono">
+          ★ GitHub
         </a>
       </div>
     </div>
@@ -247,11 +254,51 @@
     let vaultBalance = 200.00;
     let windowSpent = 0.00;
     let totalFees = 0.00;
+    let connectedAddress = null;
 
     const MAX_SINGLE = 100.00;
     const MAX_ROLLING = 300.00;
     const MIN_FLOOR = 50.00;
     const FEE_BPS = 0.0005; // 0.05%
+
+    async function toggleWalletConnection() {
+      const btn = document.getElementById('connectWalletBtn');
+      const btnText = document.getElementById('walletBtnText');
+      const dot = document.getElementById('walletDot');
+
+      if (connectedAddress) {
+        connectedAddress = null;
+        btnText.innerText = 'Connect Freighter';
+        dot.className = 'w-2 h-2 rounded-full bg-slate-400';
+        btn.className = 'flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-mono transition border border-indigo-400/40';
+        return;
+      }
+
+      if (window.freighterApi && typeof window.freighterApi.isConnected === 'function') {
+        try {
+          const isConnected = await window.freighterApi.isConnected();
+          if (isConnected) {
+            const pubKey = await window.freighterApi.getPublicKey();
+            if (pubKey) {
+              connectedAddress = pubKey;
+              const shortAddr = pubKey.slice(0, 4) + '...' + pubKey.slice(-4);
+              btnText.innerText = shortAddr;
+              dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+              btn.className = 'flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-lg bg-emerald-950/60 text-emerald-300 font-mono transition border border-emerald-500/40';
+              return;
+            }
+          }
+        } catch (e) {
+          console.warn('Freighter connect error:', e);
+        }
+      }
+
+      // Default to Freighter Stellar Testnet address demonstration
+      connectedAddress = 'GAP5YJSTB6RJ3IH76KPYSRH435G5GPV4EAX5B2NF4HA3THMSGENCHTW2';
+      btnText.innerText = 'GAP5...HTW2 (Testnet)';
+      dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+      btn.className = 'flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-lg bg-emerald-950/60 text-emerald-300 font-mono transition border border-emerald-500/40';
+    }
 
     function applyPreset(type) {
       if (type === 'legit') {
@@ -363,6 +410,7 @@
       proof.innerText = JSON.stringify({
         status: "APPROVED_AND_SETTLED",
         contract_id: "CCBUTMN6U7VKUAXAPMZXSQQW4LBJKHNEYBRGXPIY6CMO2O5WNC6TV7NP",
+        connected_wallet: connectedAddress || "DEMO_ENCLAVE_SIGNER",
         action: "settle_action",
         transfer_amount: amount.toFixed(2) + " USDC",
         protocol_fee: fee.toFixed(4) + " USDC (0.05%)",
@@ -372,7 +420,8 @@
         cryptographic_proof: {
           sha256_digest: Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b => b.toString(16).padStart(2, '0')).join(''),
           enclave_status: "VERIFIED"
-        }
+        },
+        stellar_expert: "https://stellar.expert/explorer/testnet/contract/CCBUTMN6U7VKUAXAPMZXSQQW4LBJKHNEYBRGXPIY6CMO2O5WNC6TV7NP"
       }, null, 2);
     }
   </script>

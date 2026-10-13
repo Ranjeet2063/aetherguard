@@ -20,6 +20,7 @@
 
 > 🌐 **Live Web Playground**: [https://ranjeet2063.github.io/aetherguard](https://ranjeet2063.github.io/aetherguard)  
 > 🏛️ **Live Soroban Testnet Contract**: [`CCBUTMN6U7VKUAXAPMZXSQQW4LBJKHNEYBRGXPIY6CMO2O5WNC6TV7NP`](https://stellar.expert/explorer/testnet/contract/CCBUTMN6U7VKUAXAPMZXSQQW4LBJKHNEYBRGXPIY6CMO2O5WNC6TV7NP)  
+> 🛡️ **Formal STRIDE Security Specification**: [`STRIDE_THREAT_MODEL.md`](https://github.com/Ranjeet2063/aetherguard/blob/main/STRIDE_THREAT_MODEL.md)  
 > 🔗 **Verified Deployment Tx**: [`2f93c86a6c52929d96d1ac514cc5e4322479e3429daae26799bdef6637932034`](https://stellar.expert/explorer/testnet/tx/2f93c86a6c52929d96d1ac514cc5e4322479e3429daae26799bdef6637932034)
 
 ---

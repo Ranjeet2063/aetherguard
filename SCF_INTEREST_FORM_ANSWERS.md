@@ -35,10 +35,14 @@ Developer Tooling / Infrastructure & Security
 ### 4. Current Traction
 ```text
 - Live Soroban Smart Contract Deployed on Testnet:
-  - Contract ID: CCBUTMN6U7VKUAXAPMZXSQQW4LBJKHNEYBRGXPIY6CMO2O5WNC6TV7NP
-  - Explorer Verification: https://stellar.expert/explorer/testnet/contract/CCBUTMN6U7VKUAXAPMZXSQQW4LBJKHNEYBRGXPIY6CMO2O5WNC6TV7NP
-  - Deployment Tx: 2f93c86a6c52929d96d1ac514cc5e4322479e3429daae26799bdef6637932034
-  - Optimized WASM size: 7.9 KB with 0.05% protocol micro-fee routing & event emissions.
+  - Contract ID: CAZL7IIATPQ4HJ3P2YWN5X2WC3CTFU32WLLZYY2WCIR2OVRV6CMP6N5W
+  - Explorer Verification: https://stellar.expert/explorer/testnet/contract/CAZL7IIATPQ4HJ3P2YWN5X2WC3CTFU32WLLZYY2WCIR2OVRV6CMP6N5W
+  - Deployment Tx: ad9926d29631e618357505778a56d3b472236cf26ea3994e202418cdd58ebc01
+  - Interactive Stellar Lab Console: https://lab.stellar.org/r/testnet/contract/CAZL7IIATPQ4HJ3P2YWN5X2WC3CTFU32WLLZYY2WCIR2OVRV6CMP6N5W
+  - Optimized WASM size: 7.9 KB (wasm32v1-none) with 0.05% protocol micro-fee routing & event emissions.
+- Live Open-Source Community Traction:
+  - 50 curated technical issues across Rust, Python, TypeScript, and Soroban contracts (42 labeled `good first issue`).
+  - Active GitHub repository with 7 Stars and 6 Forks.
 - Live Interactive Web Playground: https://ranjeet2063.github.io/aetherguard (Includes live Freighter Wallet extension detection, public key display, and simulated testnet fallback).
 - Formal STRIDE Security Threat Model: https://github.com/Ranjeet2063/aetherguard/blob/main/STRIDE_THREAT_MODEL.md (Microsoft STRIDE matrix tailored to autonomous agents holding keys + Ramanujan axiomatic mathematical proofs).
 - Working Monorepo & Multi-Stack SDKs: Fully implemented pure Rust invariant engine (`aetherguard-core`), on-chain Soroban contract (`aetherguard-contract`), Soroban state bindings (`aetherguard-soroban`), and interactive demo CLI (`aetherguard-cli`).

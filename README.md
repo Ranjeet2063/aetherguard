@@ -22,9 +22,10 @@
 </p>
 
 > 🌐 **Live Web Playground**: [https://ranjeet2063.github.io/aetherguard](https://ranjeet2063.github.io/aetherguard)  
-> 🏛️ **Live Soroban Testnet Contract**: [`CCBUTMN6U7VKUAXAPMZXSQQW4LBJKHNEYBRGXPIY6CMO2O5WNC6TV7NP`](https://stellar.expert/explorer/testnet/contract/CCBUTMN6U7VKUAXAPMZXSQQW4LBJKHNEYBRGXPIY6CMO2O5WNC6TV7NP)  
+> 🏛️ **Live Soroban Testnet Contract**: [`CAZL7IIATPQ4HJ3P2YWN5X2WC3CTFU32WLLZYY2WCIR2OVRV6CMP6N5W`](https://stellar.expert/explorer/testnet/contract/CAZL7IIATPQ4HJ3P2YWN5X2WC3CTFU32WLLZYY2WCIR2OVRV6CMP6N5W)  
+> 🧪 **Live Stellar Lab Interactive Console**: [Test Contract on Stellar Lab](https://lab.stellar.org/r/testnet/contract/CAZL7IIATPQ4HJ3P2YWN5X2WC3CTFU32WLLZYY2WCIR2OVRV6CMP6N5W)  
 > 🛡️ **Formal STRIDE Security Specification**: [`STRIDE_THREAT_MODEL.md`](https://github.com/Ranjeet2063/aetherguard/blob/main/STRIDE_THREAT_MODEL.md)  
-> 🔗 **Verified Deployment Tx**: [`2f93c86a6c52929d96d1ac514cc5e4322479e3429daae26799bdef6637932034`](https://stellar.expert/explorer/testnet/tx/2f93c86a6c52929d96d1ac514cc5e4322479e3429daae26799bdef6637932034)
+> 🔗 **Verified Deployment Tx**: [`ad9926d29631e618357505778a56d3b472236cf26ea3994e202418cdd58ebc01`](https://stellar.expert/explorer/testnet/tx/ad9926d29631e618357505778a56d3b472236cf26ea3994e202418cdd58ebc01)
 
 ---
 

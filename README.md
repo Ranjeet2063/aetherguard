@@ -16,6 +16,8 @@
   <a href="https://www.npmjs.com/package/aetherguard-eliza-plugin"><img src="https://img.shields.io/badge/npm-aetherguard--eliza--plugin-purple?style=for-the-badge&logo=npm&logoColor=white" /></a>
   <a href="packages/python"><img src="https://img.shields.io/badge/Python-3.9+-brightgreen?style=for-the-badge&logo=python&logoColor=white" /></a>
   <a href="https://www.rust-lang.org/"><img src="https://img.shields.io/badge/Language-Pure%20Rust-orange?style=for-the-badge&logo=rust&logoColor=white" /></a>
+  <a href="https://github.com/Ranjeet2063/aetherguard/stargazers"><img src="https://img.shields.io/github/stars/Ranjeet2063/aetherguard?style=for-the-badge&color=gold" /></a>
+  <a href="https://github.com/Ranjeet2063/aetherguard/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22"><img src="https://img.shields.io/badge/Good%20First%20Issues-Open-7057ff?style=for-the-badge&logo=github" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-blue?style=for-the-badge" /></a>
 </p>
 
@@ -191,6 +193,17 @@ Architected with mathematical rigor by:
 * **Email**: `ranjeet2063@users.noreply.github.com`
 * **Twitter / X**: [@RanjeetBhaxfo](https://x.com/RanjeetBhaxfo)
 * **Telegram**: [@guptakumarranjeet](https://t.me/guptakumarranjeet)
+
+---
+
+## 🤝 Join the Developer Community & Contribute
+
+We are building the future of autonomous agent financial safety on Stellar. Whether you are a Rust systems engineer, Python AI builder, or frontend creator, we welcome your contributions!
+
+- 🚀 **Find Beginner-Friendly Tasks**: Browse actively curated [Good First Issues](https://github.com/Ranjeet2063/aetherguard/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
+- 📖 **Contribution Guidelines**: Read our complete setup and workflow guide in [`CONTRIBUTING.md`](CONTRIBUTING.md).
+- ⚡ **24-Hour PR Review SLA**: All contributor pull requests are reviewed, verified, and merged promptly by maintainers.
+- 🏆 **Wall of Fame**: Contributors are permanently credited on the repository and release notes.
 
 ---
 

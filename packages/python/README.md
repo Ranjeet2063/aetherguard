@@ -121,6 +121,39 @@ python -m aetherguard.gateway \
 
 Alert dispatch runs in detached background threads with **zero latency overhead** on the mathematical invariant engine.
 
+### 5. DeFi Slippage & AMM Flash Guard (Soroswap / Phoenix DEX)
+
+Protect autonomous trading agents against MEV sandwich attacks and flash-loan oracle price distortion:
+
+```python
+from aetherguard import AetherGuardClient, defi_arbitrage_policy
+
+# Configure 50 bps (0.5%) maximum slippage & 150 bps (1.5%) oracle divergence
+policy = defi_arbitrage_policy(
+    max_slippage_bps=50,
+    max_oracle_deviation_bps=150,
+)
+client = AetherGuardClient(policy)
+
+# Create swap proposal with mathematical verification
+proposal = client.create_swap_proposal(
+    agent_id="soroswap_arbitrage_bot",
+    intent_prompt="Execute USDC -> XLM DEX swap",
+    target_contract="CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+    function_name="swap_exact_tokens",
+    recipient="GDQP2KPQGKIHYJGXNUIYOMHARUARCA7DJT5FO2FFOOKY3IF53Q7L5G6Z",
+    asset_in="USDC",
+    asset_out="XLM",
+    amount_in=100_000_000,
+    expected_amount_out=1_000_000_000,
+    min_amount_out=996_000_000,  # 40 bps slippage (<= 50 bps limit)
+    oracle_reference_price_bps=100_000, # 10.0 XLM/USDC reference oracle
+)
+
+proof = client.evaluate_and_prove(proposal, current_account_balance=500_000_000)
+# If an MEV sandwich attack skews slippage to > 50 bps, InvariantViolationError(EXCESSIVE_SLIPPAGE) is raised!
+```
+
 ---
 
 ## 🤖 Framework Integrations

@@ -50,6 +50,7 @@ export class AetherGuardClient {
     recipient: string;
     amount: bigint;
     assetSymbol: string;
+    swapParams?: SwapParameters;
     timestamp?: number;
   }): AgentTransactionProposal {
     const timestamp = params.timestamp ?? Math.floor(Date.now() / 1000);
@@ -69,6 +70,7 @@ export class AetherGuardClient {
       recipient: params.recipient,
       amount: params.amount,
       assetSymbol: params.assetSymbol,
+      swapParams: params.swapParams,
       timestamp,
     };
   }
@@ -179,6 +181,61 @@ export class AetherGuardClient {
         "HUMAN_CONFIRMATION_REQUIRED",
         `Spend of ${proposal.amount} exceeds automated autonomy limit ${this.policy.humanConfirmationThreshold}. Human signature required.`
       );
+    }
+
+    // 9. DeFi AMM Swap & Oracle Protection Invariant Checks
+    if (proposal.swapParams) {
+      const swap = proposal.swapParams;
+      const defiPolicy = this.policy.defiSwapPolicy || {
+        maxSlippageBps: 100,
+        maxOracleDeviationBps: 200,
+        minOutputFloor: 1n,
+      };
+
+      // 9a. Minimum Output Floor Check
+      if (swap.minAmountOut < defiPolicy.minOutputFloor) {
+        throw new InvariantViolationError(
+          "OUTPUT_BELOW_FLOOR",
+          `Swap minimum output ${swap.minAmountOut} breaches floor ${defiPolicy.minOutputFloor}`,
+          {
+            minAmountOut: swap.minAmountOut.toString(),
+            floor: defiPolicy.minOutputFloor.toString(),
+          }
+        );
+      }
+
+      // 9b. Slippage Tolerance Invariant Check
+      if (swap.expectedAmountOut > 0n && swap.minAmountOut < swap.expectedAmountOut) {
+        const diff = swap.expectedAmountOut - swap.minAmountOut;
+        const calculatedBps = Number((diff * 10000n) / swap.expectedAmountOut);
+        if (calculatedBps > defiPolicy.maxSlippageBps) {
+          throw new InvariantViolationError(
+            "EXCESSIVE_SLIPPAGE",
+            `Swap slippage ${calculatedBps} bps exceeds maximum tolerance of ${defiPolicy.maxSlippageBps} bps`,
+            {
+              calculatedBps: calculatedBps.toString(),
+              maxBps: defiPolicy.maxSlippageBps.toString(),
+            }
+          );
+        }
+      }
+
+      // 9c. Oracle Price Deviation Check
+      if (swap.oracleReferencePriceBps && swap.amountIn > 0n && swap.oracleReferencePriceBps > 0) {
+        const impliedPriceBps = Number((swap.expectedAmountOut * 10000n) / swap.amountIn);
+        const diff = Math.abs(impliedPriceBps - swap.oracleReferencePriceBps);
+        const deviationBps = Math.floor((diff * 10000) / swap.oracleReferencePriceBps);
+        if (deviationBps > defiPolicy.maxOracleDeviationBps) {
+          throw new InvariantViolationError(
+            "ORACLE_PRICE_DEVIATION_EXCEEDED",
+            `Swap price deviation ${deviationBps} bps from oracle exceeds tolerance of ${defiPolicy.maxOracleDeviationBps} bps`,
+            {
+              calculatedDeviationBps: deviationBps.toString(),
+              maxDeviationBps: defiPolicy.maxOracleDeviationBps.toString(),
+            }
+          );
+        }
+      }
     }
 
     // --- Invariants Verified ---

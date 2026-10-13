@@ -1,5 +1,20 @@
 /* Authorized Protocol Quality Assurance & Formal Verification Engine */
 
+export interface DefiSwapPolicy {
+  maxSlippageBps: number;
+  maxOracleDeviationBps: number;
+  minOutputFloor: bigint;
+}
+
+export interface SwapParameters {
+  assetIn: string;
+  assetOut: string;
+  amountIn: bigint;
+  expectedAmountOut: bigint;
+  minAmountOut: bigint;
+  oracleReferencePriceBps?: number;
+}
+
 export interface InvariantPolicy {
   maxSingleSpend: bigint;
   maxRollingWindowSpend: bigint;
@@ -9,6 +24,7 @@ export interface InvariantPolicy {
   allowedContracts: string[];
   allowedFunctions: string[];
   humanConfirmationThreshold?: bigint;
+  defiSwapPolicy?: DefiSwapPolicy;
   isEmergencyPaused?: boolean;
 }
 
@@ -21,6 +37,7 @@ export interface AgentTransactionProposal {
   recipient: string;
   amount: bigint;
   assetSymbol: string;
+  swapParams?: SwapParameters;
   timestamp: number;
 }
 
@@ -43,7 +60,10 @@ export type InvariantFailureReason =
   | "UNAUTHORIZED_CONTRACT"
   | "UNAUTHORIZED_FUNCTION"
   | "EMERGENCY_PAUSE_ACTIVE"
-  | "HUMAN_CONFIRMATION_REQUIRED";
+  | "HUMAN_CONFIRMATION_REQUIRED"
+  | "EXCESSIVE_SLIPPAGE"
+  | "ORACLE_PRICE_DEVIATION_EXCEEDED"
+  | "OUTPUT_BELOW_FLOOR";
 
 export class InvariantViolationError extends Error {
   constructor(

@@ -3,6 +3,27 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
+/// DeFi AMM Swap & Oracle Protection Invariant boundaries
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct DefiSwapPolicy {
+    /// Maximum allowable slippage in basis points (e.g. 50 = 0.5%, 100 = 1.0%)
+    pub max_slippage_bps: u32,
+    /// Maximum allowable divergence from reference TWAP / Oracle price in basis points (e.g. 150 = 1.5%)
+    pub max_oracle_deviation_bps: u32,
+    /// Absolute minimum output token floor required from any swap
+    pub min_output_floor: u128,
+}
+
+impl Default for DefiSwapPolicy {
+    fn default() -> Self {
+        Self {
+            max_slippage_bps: 100,           // 1.0% default max slippage
+            max_oracle_deviation_bps: 200,   // 2.0% default oracle deviation
+            min_output_floor: 1,             // Minimum 1 atomic unit floor
+        }
+    }
+}
+
 /// Formal Policy specification defining mathematical boundaries for Autonomous AI agents.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InvariantPolicy {
@@ -31,6 +52,9 @@ pub struct InvariantPolicy {
     /// Spending threshold that triggers automated escalation to human operator
     pub human_confirmation_threshold: Option<u128>,
 
+    /// Optional DeFi Swap & Oracle slippage invariants
+    pub defi_swap_policy: Option<DefiSwapPolicy>,
+
     /// Emergency kill-switch state
     pub is_emergency_paused: bool,
 }
@@ -51,6 +75,7 @@ pub struct InvariantPolicyBuilder {
     allowed_contracts: HashSet<String>,
     allowed_functions: HashSet<String>,
     human_confirmation_threshold: Option<u128>,
+    defi_swap_policy: Option<DefiSwapPolicy>,
     is_emergency_paused: bool,
 }
 
@@ -91,6 +116,18 @@ impl InvariantPolicyBuilder {
         self
     }
 
+    pub fn defi_swap_policy(mut self, policy: DefiSwapPolicy) -> Self {
+        self.defi_swap_policy = Some(policy);
+        self
+    }
+
+    pub fn max_slippage_bps(mut self, bps: u32) -> Self {
+        let mut defi = self.defi_swap_policy.unwrap_or_default();
+        defi.max_slippage_bps = bps;
+        self.defi_swap_policy = Some(defi);
+        self
+    }
+
     pub fn build(self) -> InvariantPolicy {
         InvariantPolicy {
             max_single_spend: self.max_single_spend,
@@ -101,6 +138,7 @@ impl InvariantPolicyBuilder {
             allowed_contracts: self.allowed_contracts,
             allowed_functions: self.allowed_functions,
             human_confirmation_threshold: self.human_confirmation_threshold,
+            defi_swap_policy: self.defi_swap_policy,
             is_emergency_paused: self.is_emergency_paused,
         }
     }

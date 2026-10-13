@@ -7,7 +7,7 @@ import time
 import json
 import threading
 import unittest
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 
 from aetherguard.alerts import WebhookAlertManager, AlertLevel
 
@@ -36,8 +36,8 @@ class TestWebhookAlertManager(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         MockWebhookHandler.received_payloads.clear()
-        cls.port = 18888
-        cls.server = HTTPServer(("127.0.0.1", cls.port), MockWebhookHandler)
+        cls.server = ThreadingHTTPServer(("127.0.0.1", 0), MockWebhookHandler)
+        cls.port = cls.server.server_address[1]
         cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
         cls.thread.start()
 
@@ -92,7 +92,10 @@ class TestWebhookAlertManager(unittest.TestCase):
         self.assertLess(elapsed, 0.05)
 
         # Allow background thread up to 1 second to dispatch
-        time.sleep(0.15)
+        for _ in range(20):
+            if len(MockWebhookHandler.received_payloads) >= 1:
+                break
+            time.sleep(0.05)
         self.assertEqual(len(MockWebhookHandler.received_payloads), 1)
         payload = MockWebhookHandler.received_payloads[0]
         self.assertEqual(payload.get("status"), "BLOCKED")

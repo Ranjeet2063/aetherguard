@@ -82,3 +82,32 @@ def micropayment_policy(
     )
     validate_policy(p)
     return p
+
+
+def defi_arbitrage_policy(
+    min_balance_floor: int = 50_000_000,    # 5 XLM
+    max_single_spend: int = 500_000_000,    # 50 XLM
+    max_rolling_window_spend: int = 2_000_000_000, # 200 XLM per hour
+    rolling_window_seconds: int = 3600,     # 1 hour
+    max_slippage_bps: int = 50,             # 0.5% max slippage
+    max_oracle_deviation_bps: int = 150,    # 1.5% max oracle deviation
+    allowed_contracts: Optional[list[str]] = None,
+) -> InvariantPolicy:
+    """
+    Creates a dedicated DeFi Arbitrage & DEX Trading policy with strict slippage and oracle invariants.
+    """
+    from .types import DefiSwapPolicy
+    p = InvariantPolicy(
+        max_single_spend=max_single_spend,
+        max_rolling_window_spend=max_rolling_window_spend,
+        rolling_window_seconds=rolling_window_seconds,
+        min_balance_floor=min_balance_floor,
+        allowed_contracts=allowed_contracts or [],
+        defi_swap_policy=DefiSwapPolicy(
+            max_slippage_bps=max_slippage_bps,
+            max_oracle_deviation_bps=max_oracle_deviation_bps,
+            min_output_floor=1,
+        ),
+    )
+    validate_policy(p)
+    return p

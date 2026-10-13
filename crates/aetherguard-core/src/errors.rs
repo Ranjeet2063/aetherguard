@@ -39,4 +39,13 @@ pub enum AetherError {
 
     #[error("Escalation Required: Transaction of {amount} exceeds automated autonomy limit {threshold}. Operator confirmation required.")]
     HumanConfirmationRequired { amount: u128, threshold: u128 },
+
+    #[error("Mathematical Invariant Violation: Swap slippage {calculated_bps} bps exceeds maximum tolerance of {max_bps} bps")]
+    ExcessiveSlippage { calculated_bps: u32, max_bps: u32 },
+
+    #[error("Mathematical Invariant Violation: Swap execution price deviates {calculated_bps} bps from oracle reference price, exceeding {max_bps} bps tolerance")]
+    OraclePriceDeviationExceeded { calculated_bps: u32, max_bps: u32 },
+
+    #[error("Mathematical Invariant Violation: Swap minimum output {min_amount_out} breaches required floor of {floor}")]
+    OutputBelowFloor { min_amount_out: u128, floor: u128 },
 }

@@ -12,7 +12,7 @@ from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from typing import Optional
 
 from .client import AetherGuardClient
-from .types import InvariantPolicy
+from .types import InvariantPolicy, DefiSwapPolicy, SwapParameters
 from .policy import conservative_policy
 from .errors import InvariantViolationError
 from .alerts import WebhookAlertManager, AlertLevel
@@ -118,6 +118,15 @@ class InvariantGatewayHandler(BaseHTTPRequestHandler):
 
         self.stats["total_evaluated"] += 1
 
+        swap_params_raw = payload.get("swap_params")
+        swap_params = None
+        if isinstance(swap_params_raw, dict):
+            try:
+                swap_params = SwapParameters.from_dict(swap_params_raw)
+            except Exception as e:
+                self._send_json(400, {"error": f"Invalid swap_params: {e}"})
+                return
+
         proposal = self.client.create_proposal(
             agent_id=agent_id,
             intent_prompt=payload.get("intent_prompt", f"Gateway transfer of {amount} to {recipient}"),
@@ -126,6 +135,7 @@ class InvariantGatewayHandler(BaseHTTPRequestHandler):
             recipient=recipient,
             amount=amount,
             asset_symbol=asset_symbol,
+            swap_params=swap_params,
         )
 
         try:
@@ -240,6 +250,8 @@ def main():
     parser.add_argument("--telegram-chat", default=None, help="Telegram Chat ID for alerts")
     parser.add_argument("--discord-webhook", default=None, help="Discord Webhook URL for alerts")
     parser.add_argument("--alert-level", default="ALL", choices=["ALL", "VIOLATIONS", "HIGH_VALUE"], help="Alert trigger level")
+    parser.add_argument("--max-slippage-bps", type=int, default=100, help="Maximum allowable DEX swap slippage in basis points (default: 100 bps / 1.0%)")
+    parser.add_argument("--max-oracle-deviation-bps", type=int, default=200, help="Maximum allowable price deviation from oracle in basis points (default: 200 bps / 2.0%)")
 
     args = parser.parse_args()
 
@@ -248,6 +260,11 @@ def main():
         max_rolling_window_spend=args.window_cap,
         rolling_window_seconds=args.window_secs,
         min_balance_floor=args.floor,
+        defi_swap_policy=DefiSwapPolicy(
+            max_slippage_bps=args.max_slippage_bps,
+            max_oracle_deviation_bps=args.max_oracle_deviation_bps,
+            min_output_floor=1,
+        ),
     )
 
     alert_mgr = WebhookAlertManager(
@@ -263,6 +280,7 @@ def main():
     print(f"   • Single Spend Cap:       {args.cap / 10_000_000:.2f} XLM")
     print(f"   • Rolling Window Cap:     {args.window_cap / 10_000_000:.2f} XLM / {args.window_secs}s")
     print(f"   • Minimum Reserve Floor:  {args.floor / 10_000_000:.2f} XLM")
+    print(f"   • DeFi Slippage Guard:    {args.max_slippage_bps} bps ({args.max_slippage_bps / 100:.2f}%) / Oracle Dev: {args.max_oracle_deviation_bps} bps")
     if alert_mgr.has_active_channels():
         print(f"   • Mobile Alerts:          ACTIVE ({args.alert_level})")
     print("=" * 70)

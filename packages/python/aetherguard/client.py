@@ -9,7 +9,13 @@ import time
 from dataclasses import dataclass
 from typing import Optional, Any
 
-from .types import InvariantPolicy, AgentTransactionProposal, ProofOfInvariant
+from .types import (
+    InvariantPolicy,
+    AgentTransactionProposal,
+    ProofOfInvariant,
+    DefiSwapPolicy,
+    SwapParameters,
+)
 from .errors import InvariantViolationError, InvariantFailureReason
 
 
@@ -34,6 +40,7 @@ class AetherGuardClient:
             allowed_contracts=list(policy.allowed_contracts or []),
             allowed_functions=list(policy.allowed_functions or []),
             human_confirmation_threshold=policy.human_confirmation_threshold,
+            defi_swap_policy=policy.defi_swap_policy,
             is_emergency_paused=bool(policy.is_emergency_paused),
         )
         self._spend_history: list[SpendEvent] = []
@@ -73,6 +80,7 @@ class AetherGuardClient:
         amount: int,
         asset_symbol: str,
         timestamp: Optional[int] = None,
+        swap_params: Optional[SwapParameters] = None,
     ) -> AgentTransactionProposal:
         """
         Creates a structured transaction proposal from an AI agent's execution intent.
@@ -95,6 +103,45 @@ class AetherGuardClient:
             amount=amount,
             asset_symbol=asset_symbol,
             timestamp=ts,
+            swap_params=swap_params,
+        )
+
+    def create_swap_proposal(
+        self,
+        agent_id: str,
+        intent_prompt: str,
+        target_contract: str,
+        function_name: str,
+        recipient: str,
+        asset_in: str,
+        asset_out: str,
+        amount_in: int,
+        expected_amount_out: int,
+        min_amount_out: int,
+        oracle_reference_price_bps: Optional[int] = None,
+        timestamp: Optional[int] = None,
+    ) -> AgentTransactionProposal:
+        """
+        Creates a structured DEX swap proposal with slippage and oracle protection boundaries.
+        """
+        swap_params = SwapParameters(
+            asset_in=asset_in,
+            asset_out=asset_out,
+            amount_in=amount_in,
+            expected_amount_out=expected_amount_out,
+            min_amount_out=min_amount_out,
+            oracle_reference_price_bps=oracle_reference_price_bps,
+        )
+        return self.create_proposal(
+            agent_id=agent_id,
+            intent_prompt=intent_prompt,
+            target_contract=target_contract,
+            function_name=function_name,
+            recipient=recipient,
+            amount=amount_in,
+            asset_symbol=asset_in,
+            timestamp=timestamp,
+            swap_params=swap_params,
         )
 
     def evaluate_and_prove(
@@ -200,6 +247,55 @@ class AetherGuardClient:
                 },
             )
 
+        # 9. DeFi AMM Swap & Oracle Protection Invariant Checks
+        if proposal.swap_params:
+            swap = proposal.swap_params
+            defi_policy = self._policy.defi_swap_policy or DefiSwapPolicy()
+
+            # 9a. Minimum Output Floor Check
+            if swap.min_amount_out < defi_policy.min_output_floor:
+                raise InvariantViolationError(
+                    InvariantFailureReason.OUTPUT_BELOW_FLOOR,
+                    f"Swap minimum output {swap.min_amount_out} breaches floor {defi_policy.min_output_floor}",
+                    {
+                        "min_amount_out": str(swap.min_amount_out),
+                        "floor": str(defi_policy.min_output_floor),
+                    },
+                )
+
+            # 9b. Slippage Tolerance Invariant Check (Anti-Sandwich Guard)
+            if swap.expected_amount_out > 0 and swap.min_amount_out < swap.expected_amount_out:
+                diff = swap.expected_amount_out - swap.min_amount_out
+                calculated_bps = (diff * 10_000) // swap.expected_amount_out
+                if calculated_bps > defi_policy.max_slippage_bps:
+                    raise InvariantViolationError(
+                        InvariantFailureReason.EXCESSIVE_SLIPPAGE,
+                        f"Swap slippage {calculated_bps} bps exceeds maximum tolerance of {defi_policy.max_slippage_bps} bps",
+                        {
+                            "calculated_bps": str(calculated_bps),
+                            "max_bps": str(defi_policy.max_slippage_bps),
+                            "expected_out": str(swap.expected_amount_out),
+                            "min_out": str(swap.min_amount_out),
+                        },
+                    )
+
+            # 9c. Oracle Price Deviation Check (Anti-Flash-Loan / Anti-Manipulation Guard)
+            if swap.oracle_reference_price_bps and swap.amount_in > 0 and swap.oracle_reference_price_bps > 0:
+                implied_price_bps = (swap.expected_amount_out * 10_000) // swap.amount_in
+                diff = abs(implied_price_bps - swap.oracle_reference_price_bps)
+                deviation_bps = (diff * 10_000) // swap.oracle_reference_price_bps
+                if deviation_bps > defi_policy.max_oracle_deviation_bps:
+                    raise InvariantViolationError(
+                        InvariantFailureReason.ORACLE_PRICE_DEVIATION_EXCEEDED,
+                        f"Swap price deviation {deviation_bps} bps from oracle exceeds tolerance of {defi_policy.max_oracle_deviation_bps} bps",
+                        {
+                            "calculated_deviation_bps": str(deviation_bps),
+                            "max_deviation_bps": str(defi_policy.max_oracle_deviation_bps),
+                            "implied_price_bps": str(implied_price_bps),
+                            "oracle_reference_price_bps": str(swap.oracle_reference_price_bps),
+                        },
+                    )
+
         # --- Invariants Formally Verified ---
         self._spend_history.append(
             SpendEvent(timestamp=proposal.timestamp, amount=proposal.amount)
@@ -216,6 +312,10 @@ class AetherGuardClient:
         proof_hasher.update(proposal.proposal_id.encode("utf-8"))
         proof_hasher.update(str(projected_balance).encode("utf-8"))
         proof_hasher.update(str(remaining_rolling_budget).encode("utf-8"))
+        if proposal.swap_params:
+            proof_hasher.update(proposal.swap_params.asset_in.encode("utf-8"))
+            proof_hasher.update(proposal.swap_params.asset_out.encode("utf-8"))
+            proof_hasher.update(str(proposal.swap_params.min_amount_out).encode("utf-8"))
         proof_hasher.update(str(proposal.timestamp).encode("utf-8"))
         digest = proof_hasher.hexdigest()
 

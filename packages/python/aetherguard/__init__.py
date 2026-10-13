@@ -4,13 +4,20 @@ AetherGuard Python SDK
 Mathematical Invariant Firewall and Financial OS for Autonomous AI Agents.
 """
 
-from .types import InvariantPolicy, AgentTransactionProposal, ProofOfInvariant
+from .types import (
+    InvariantPolicy,
+    AgentTransactionProposal,
+    ProofOfInvariant,
+    DefiSwapPolicy,
+    SwapParameters,
+)
 from .errors import InvariantViolationError, InvariantFailureReason, AetherGuardError
 from .policy import (
     PolicyValidationError,
     validate_policy,
     conservative_policy,
     micropayment_policy,
+    defi_arbitrage_policy,
 )
 from .client import AetherGuardClient
 from .gateway import run_gateway, InvariantGatewayHandler
@@ -30,6 +37,8 @@ __all__ = [
     "InvariantPolicy",
     "AgentTransactionProposal",
     "ProofOfInvariant",
+    "DefiSwapPolicy",
+    "SwapParameters",
     "InvariantViolationError",
     "InvariantFailureReason",
     "AetherGuardError",
@@ -37,6 +46,7 @@ __all__ = [
     "validate_policy",
     "conservative_policy",
     "micropayment_policy",
+    "defi_arbitrage_policy",
     "AetherGuardClient",
     "run_gateway",
     "InvariantGatewayHandler",

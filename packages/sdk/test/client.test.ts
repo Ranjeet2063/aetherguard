@@ -87,4 +87,67 @@ describe("AetherGuardClient TypeScript SDK", () => {
       client.evaluateAndProve(attackProposal, 500_000_000n);
     }).toThrow(/UNAUTHORIZED_RECIPIENT/);
   });
+
+  it("should approve valid swap within slippage tolerance", () => {
+    const client = new AetherGuardClient({
+      ...samplePolicy,
+      defiSwapPolicy: {
+        maxSlippageBps: 50,
+        maxOracleDeviationBps: 150,
+        minOutputFloor: 1n,
+      },
+    });
+
+    const proposal = client.createProposal({
+      agentId: "defi_agent",
+      intentPrompt: "Swap USDC for XLM on Soroswap",
+      targetContract: "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+      functionName: "swap_exact_tokens",
+      recipient: "GDQP2KPQGKIHYJGXNUIYOMHARUARCA7DJT5FO2FFOOKY3IF53Q7L5G6Z",
+      amount: 50_000_000n,
+      assetSymbol: "USDC",
+      swapParams: {
+        assetIn: "USDC",
+        assetOut: "XLM",
+        amountIn: 50_000_000n,
+        expectedAmountOut: 500_000_000n,
+        minAmountOut: 498_000_000n, // 40 bps slippage <= 50 bps limit
+      },
+    });
+
+    const proof = client.evaluateAndProve(proposal, 500_000_000n);
+    expect(proof.status).toBe("APPROVED");
+  });
+
+  it("should intercept and block sandwich attack with excessive slippage", () => {
+    const client = new AetherGuardClient({
+      ...samplePolicy,
+      defiSwapPolicy: {
+        maxSlippageBps: 50,
+        maxOracleDeviationBps: 150,
+        minOutputFloor: 1n,
+      },
+    });
+
+    const attackProposal = client.createProposal({
+      agentId: "exploited_agent",
+      intentPrompt: "Swap with high slippage",
+      targetContract: "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+      functionName: "swap_exact_tokens",
+      recipient: "GDQP2KPQGKIHYJGXNUIYOMHARUARCA7DJT5FO2FFOOKY3IF53Q7L5G6Z",
+      amount: 50_000_000n,
+      assetSymbol: "USDC",
+      swapParams: {
+        assetIn: "USDC",
+        assetOut: "XLM",
+        amountIn: 50_000_000n,
+        expectedAmountOut: 500_000_000n,
+        minAmountOut: 460_000_000n, // 800 bps (8%) > 50 bps limit
+      },
+    });
+
+    expect(() => {
+      client.evaluateAndProve(attackProposal, 500_000_000n);
+    }).toThrow(/EXCESSIVE_SLIPPAGE/);
+  });
 });

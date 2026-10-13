@@ -9,8 +9,8 @@ pub mod proposals;
 pub use crypto::{compute_invariant_digest, EnclaveKeyVault};
 pub use engine::AetherGuardEngine;
 pub use errors::AetherError;
-pub use invariants::{InvariantPolicy, InvariantPolicyBuilder, ProofOfInvariant};
-pub use proposals::AgentTransactionProposal;
+pub use invariants::{DefiSwapPolicy, InvariantPolicy, InvariantPolicyBuilder, ProofOfInvariant};
+pub use proposals::{AgentTransactionProposal, SwapParameters};
 
 #[cfg(test)]
 mod tests {
@@ -189,5 +189,194 @@ mod tests {
         // Tx 4: 50 USDC at t=400 (Fails! Aggregate 350 > 300 max limit in 1h)
         let res = engine.evaluate_and_prove(&make_prop("p4", 500_000_000, 400), balance);
         assert!(matches!(res, Err(AetherError::RollingWindowLimitExceeded { .. })));
+    }
+
+    #[test]
+    fn test_valid_defi_swap_within_slippage_passes() {
+        let policy = InvariantPolicy::builder()
+            .max_single_spend(1_000_000_000)
+            .max_rolling_window(5_000_000_000, 3600)
+            .min_balance_floor(100_000_000)
+            .allow_contract("CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC")
+            .allow_recipient("GDQP2KPQGKIHYJGXNUIYOMHARUARCA7DJT5FO2FFOOKY3IF53Q7L5G6Z")
+            .allow_function("swap_exact_tokens")
+            .max_slippage_bps(50) // Max 0.5% (50 bps)
+            .build();
+
+        let vault = EnclaveKeyVault::generate();
+        let mut engine = AetherGuardEngine::new(policy, vault);
+
+        // Swap 10 USDC (100_000_000 stroops).
+        // Expected out: 100 XLM (1_000_000_000 stroops).
+        // Min out: 99.6 XLM (996_000_000 stroops) -> 40 bps slippage (within 50 bps limit!)
+        let proposal = AgentTransactionProposal::new(
+            "defi_arbitrage_agent",
+            "Swap 10 USDC for XLM on Soroswap pool",
+            "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+            "swap_exact_tokens",
+            "GDQP2KPQGKIHYJGXNUIYOMHARUARCA7DJT5FO2FFOOKY3IF53Q7L5G6Z",
+            100_000_000,
+            "USDC",
+            1760000000,
+        )
+        .with_swap_params(SwapParameters {
+            asset_in: "USDC".into(),
+            asset_out: "XLM".into(),
+            amount_in: 100_000_000,
+            expected_amount_out: 1_000_000_000,
+            min_amount_out: 996_000_000, // 40 bps slippage
+            oracle_reference_price_bps: Some(100_000), // Reference rate: 10 XLM per USDC = 100,000 bps
+        });
+
+        let balance = 1_000_000_000;
+        let res = engine.evaluate_and_prove(&proposal, balance);
+        assert!(res.is_ok());
+    }
+
+    #[test]
+    fn test_sandwich_attack_excessive_slippage_is_blocked() {
+        let policy = InvariantPolicy::builder()
+            .max_single_spend(1_000_000_000)
+            .max_rolling_window(5_000_000_000, 3600)
+            .min_balance_floor(100_000_000)
+            .allow_contract("CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC")
+            .allow_recipient("GDQP2KPQGKIHYJGXNUIYOMHARUARCA7DJT5FO2FFOOKY3IF53Q7L5G6Z")
+            .allow_function("swap_exact_tokens")
+            .max_slippage_bps(50) // Max 0.5% (50 bps)
+            .build();
+
+        let vault = EnclaveKeyVault::generate();
+        let mut engine = AetherGuardEngine::new(policy, vault);
+
+        // Adversary or MEV bot created slippage: min_amount_out is 950_000_000 (500 bps = 5.0% slippage!)
+        let proposal = AgentTransactionProposal::new(
+            "tricked_agent",
+            "Swap 10 USDC for XLM with manipulated slippage tolerance",
+            "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+            "swap_exact_tokens",
+            "GDQP2KPQGKIHYJGXNUIYOMHARUARCA7DJT5FO2FFOOKY3IF53Q7L5G6Z",
+            100_000_000,
+            "USDC",
+            1760000000,
+        )
+        .with_swap_params(SwapParameters {
+            asset_in: "USDC".into(),
+            asset_out: "XLM".into(),
+            amount_in: 100_000_000,
+            expected_amount_out: 1_000_000_000,
+            min_amount_out: 950_000_000, // 500 bps (5.0%) > 50 bps limit!
+            oracle_reference_price_bps: None,
+        });
+
+        let balance = 1_000_000_000;
+        let res = engine.evaluate_and_prove(&proposal, balance);
+        match res {
+            Err(AetherError::ExcessiveSlippage { calculated_bps, max_bps }) => {
+                assert_eq!(calculated_bps, 500);
+                assert_eq!(max_bps, 50);
+            }
+            other => panic!("Expected ExcessiveSlippage, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_flash_loan_oracle_manipulation_is_blocked() {
+        let policy = InvariantPolicy::builder()
+            .max_single_spend(1_000_000_000)
+            .max_rolling_window(5_000_000_000, 3600)
+            .min_balance_floor(100_000_000)
+            .allow_contract("CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC")
+            .allow_recipient("GDQP2KPQGKIHYJGXNUIYOMHARUARCA7DJT5FO2FFOOKY3IF53Q7L5G6Z")
+            .allow_function("swap_exact_tokens")
+            .defi_swap_policy(DefiSwapPolicy {
+                max_slippage_bps: 100,
+                max_oracle_deviation_bps: 150, // 1.5% max oracle deviation
+                min_output_floor: 10_000,
+            })
+            .build();
+
+        let vault = EnclaveKeyVault::generate();
+        let mut engine = AetherGuardEngine::new(policy, vault);
+
+        // Flash loan pool skew: spot price implied is 80 XLM per 10 USDC (80_000 bps)
+        // while Oracle reference rate is 100_000 bps (10 XLM per USDC).
+        // Deviation = |80,000 - 100,000| * 10,000 / 100,000 = 2,000 bps (20% divergence > 1.5% limit)
+        let proposal = AgentTransactionProposal::new(
+            "manipulated_spot_agent",
+            "Swap 10 USDC during flash loan pool imbalance",
+            "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+            "swap_exact_tokens",
+            "GDQP2KPQGKIHYJGXNUIYOMHARUARCA7DJT5FO2FFOOKY3IF53Q7L5G6Z",
+            100_000_000,
+            "USDC",
+            1760000000,
+        )
+        .with_swap_params(SwapParameters {
+            asset_in: "USDC".into(),
+            asset_out: "XLM".into(),
+            amount_in: 100_000_000,
+            expected_amount_out: 800_000_000, // 80_000 bps implied
+            min_amount_out: 795_000_000,
+            oracle_reference_price_bps: Some(100_000), // 20% divergence
+        });
+
+        let balance = 1_000_000_000;
+        let res = engine.evaluate_and_prove(&proposal, balance);
+        match res {
+            Err(AetherError::OraclePriceDeviationExceeded { calculated_bps, max_bps }) => {
+                assert_eq!(calculated_bps, 2000);
+                assert_eq!(max_bps, 150);
+            }
+            other => panic!("Expected OraclePriceDeviationExceeded, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_swap_output_below_floor_is_blocked() {
+        let policy = InvariantPolicy::builder()
+            .max_single_spend(1_000_000_000)
+            .max_rolling_window(5_000_000_000, 3600)
+            .min_balance_floor(100_000_000)
+            .allow_contract("CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC")
+            .allow_recipient("GDQP2KPQGKIHYJGXNUIYOMHARUARCA7DJT5FO2FFOOKY3IF53Q7L5G6Z")
+            .allow_function("swap_exact_tokens")
+            .defi_swap_policy(DefiSwapPolicy {
+                max_slippage_bps: 100,
+                max_oracle_deviation_bps: 200,
+                min_output_floor: 500_000_000, // 50 tokens floor
+            })
+            .build();
+
+        let vault = EnclaveKeyVault::generate();
+        let mut engine = AetherGuardEngine::new(policy, vault);
+
+        let proposal = AgentTransactionProposal::new(
+            "agent",
+            "Swap with zero output floor",
+            "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+            "swap_exact_tokens",
+            "GDQP2KPQGKIHYJGXNUIYOMHARUARCA7DJT5FO2FFOOKY3IF53Q7L5G6Z",
+            100_000_000,
+            "USDC",
+            1760000000,
+        )
+        .with_swap_params(SwapParameters {
+            asset_in: "USDC".into(),
+            asset_out: "XLM".into(),
+            amount_in: 100_000_000,
+            expected_amount_out: 400_000_000,
+            min_amount_out: 395_000_000, // Below 500_000_000 floor!
+            oracle_reference_price_bps: None,
+        });
+
+        let balance = 1_000_000_000;
+        let res = engine.evaluate_and_prove(&proposal, balance);
+        match res {
+            Err(AetherError::OutputBelowFloor { min_amount_out, floor }) => {
+                assert_eq!(min_amount_out, 395_000_000);
+                assert_eq!(floor, 500_000_000);
+            }
+            other => panic!("Expected OutputBelowFloor, got {:?}", other),
+        }
     }
 }

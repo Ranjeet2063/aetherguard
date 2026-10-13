@@ -137,6 +137,51 @@ impl AetherGuardEngine {
             }
         }
 
+        // 9. DeFi AMM Swap & Oracle Protection Invariant Checks
+        if let Some(ref swap) = proposal.swap_params {
+            let defi_policy = self
+                .policy
+                .defi_swap_policy
+                .as_ref()
+                .cloned()
+                .unwrap_or_default();
+
+            // 9a. Minimum Output Floor Check
+            if swap.min_amount_out < defi_policy.min_output_floor {
+                return Err(AetherError::OutputBelowFloor {
+                    min_amount_out: swap.min_amount_out,
+                    floor: defi_policy.min_output_floor,
+                });
+            }
+
+            // 9b. Slippage Tolerance Invariant Check (Anti-Sandwich Guard)
+            if swap.expected_amount_out > 0 && swap.min_amount_out < swap.expected_amount_out {
+                let diff = swap.expected_amount_out - swap.min_amount_out;
+                let calculated_bps = (diff.saturating_mul(10_000)) / swap.expected_amount_out;
+                if calculated_bps > defi_policy.max_slippage_bps as u128 {
+                    return Err(AetherError::ExcessiveSlippage {
+                        calculated_bps: calculated_bps as u32,
+                        max_bps: defi_policy.max_slippage_bps,
+                    });
+                }
+            }
+
+            // 9c. Oracle Price Deviation Check (Anti-Flash-Loan / Anti-Manipulation Guard)
+            if let Some(oracle_price_bps) = swap.oracle_reference_price_bps {
+                if swap.amount_in > 0 && oracle_price_bps > 0 {
+                    let implied_price_bps = (swap.expected_amount_out.saturating_mul(10_000)) / swap.amount_in;
+                    let diff = implied_price_bps.abs_diff(oracle_price_bps as u128);
+                    let deviation_bps = (diff.saturating_mul(10_000)) / (oracle_price_bps as u128);
+                    if deviation_bps > defi_policy.max_oracle_deviation_bps as u128 {
+                        return Err(AetherError::OraclePriceDeviationExceeded {
+                            calculated_bps: deviation_bps as u32,
+                            max_bps: defi_policy.max_oracle_deviation_bps,
+                        });
+                    }
+                }
+            }
+        }
+
         // --- All Invariants Proven Satisfied ---
         // Record spend into sliding window
         self.spend_history.push(SpendEvent {

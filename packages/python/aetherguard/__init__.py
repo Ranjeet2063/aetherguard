@@ -14,6 +14,7 @@ from .policy import (
 )
 from .client import AetherGuardClient
 from .gateway import run_gateway, InvariantGatewayHandler
+from .alerts import WebhookAlertManager, AlertLevel
 
 __version__ = "0.2.0"
 
@@ -40,4 +41,6 @@ __all__ = [
     "run_gateway",
     "InvariantGatewayHandler",
     "render_dashboard",
+    "WebhookAlertManager",
+    "AlertLevel",
 ]

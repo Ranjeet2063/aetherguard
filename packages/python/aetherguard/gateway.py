@@ -15,6 +15,7 @@ from .client import AetherGuardClient
 from .types import InvariantPolicy
 from .policy import conservative_policy
 from .errors import InvariantViolationError
+from .alerts import WebhookAlertManager, AlertLevel
 
 logger = logging.getLogger("aetherguard.gateway")
 
@@ -24,6 +25,7 @@ class InvariantGatewayHandler(BaseHTTPRequestHandler):
     HTTP Request Handler for AetherGuard Invariant Gateway.
     """
     client: AetherGuardClient = None
+    alert_manager: Optional[WebhookAlertManager] = None
     default_balance: int = 500_000_000  # Default simulated balance: 50 XLM in stroops
     event_history: list[dict] = []
     stats: dict = {
@@ -140,6 +142,16 @@ class InvariantGatewayHandler(BaseHTTPRequestHandler):
                 "digest": proof.invariant_digest_hex,
             })
 
+            if self.alert_manager:
+                self.alert_manager.notify_event_async(
+                    agent_id=agent_id,
+                    amount=amount,
+                    recipient=recipient,
+                    status="APPROVED",
+                    detail=proof.invariant_digest_hex,
+                    timestamp=proof.verified_at,
+                )
+
             self._send_json(200, {
                 "status": "APPROVED",
                 "proposal_id": proof.proposal_id,
@@ -161,6 +173,16 @@ class InvariantGatewayHandler(BaseHTTPRequestHandler):
                 "status": "BLOCKED",
                 "reason": violation.reason.value,
             })
+
+            if self.alert_manager:
+                self.alert_manager.notify_event_async(
+                    agent_id=agent_id,
+                    amount=amount,
+                    recipient=recipient,
+                    status="BLOCKED",
+                    detail=violation.reason.value,
+                    timestamp=proposal.timestamp,
+                )
 
             self._send_json(403, {
                 "status": "BLOCKED",
@@ -188,9 +210,10 @@ def run_gateway(
     host: str = "127.0.0.1",
     port: int = 8787,
     policy: Optional[InvariantPolicy] = None,
+    alert_manager: Optional[WebhookAlertManager] = None,
 ) -> ThreadingHTTPServer:
     """
-    Initializes and starts the Threading Invariant Gateway server.
+    Initializes and starts the Threading Invariant Gateway server with optional alert manager.
     """
     active_policy = policy or conservative_policy()
     client = AetherGuardClient(active_policy)
@@ -199,6 +222,7 @@ def run_gateway(
         pass
 
     BoundHandler.client = client
+    BoundHandler.alert_manager = alert_manager or WebhookAlertManager()
 
     server = ThreadingHTTPServer((host, port), BoundHandler)
     return server
@@ -212,6 +236,10 @@ def main():
     parser.add_argument("--cap", type=int, default=50_000_000, help="Single spend cap in stroops (default: 5 XLM)")
     parser.add_argument("--window-cap", type=int, default=150_000_000, help="Rolling window cap in stroops (default: 15 XLM)")
     parser.add_argument("--window-secs", type=int, default=3600, help="Rolling window duration in seconds (default: 3600s)")
+    parser.add_argument("--telegram-token", default=None, help="Telegram Bot Token for alerts")
+    parser.add_argument("--telegram-chat", default=None, help="Telegram Chat ID for alerts")
+    parser.add_argument("--discord-webhook", default=None, help="Discord Webhook URL for alerts")
+    parser.add_argument("--alert-level", default="ALL", choices=["ALL", "VIOLATIONS", "HIGH_VALUE"], help="Alert trigger level")
 
     args = parser.parse_args()
 
@@ -222,12 +250,21 @@ def main():
         min_balance_floor=args.floor,
     )
 
-    server = run_gateway(host=args.host, port=args.port, policy=policy)
+    alert_mgr = WebhookAlertManager(
+        telegram_token=args.telegram_token,
+        telegram_chat_id=args.telegram_chat,
+        discord_webhook_url=args.discord_webhook,
+        alert_level=AlertLevel(args.alert_level),
+    )
+
+    server = run_gateway(host=args.host, port=args.port, policy=policy, alert_manager=alert_mgr)
     print("=" * 70)
     print(f"🛡️  AetherGuard Universal Invariant Gateway running on http://{args.host}:{args.port}")
     print(f"   • Single Spend Cap:       {args.cap / 10_000_000:.2f} XLM")
     print(f"   • Rolling Window Cap:     {args.window_cap / 10_000_000:.2f} XLM / {args.window_secs}s")
     print(f"   • Minimum Reserve Floor:  {args.floor / 10_000_000:.2f} XLM")
+    if alert_mgr.has_active_channels():
+        print(f"   • Mobile Alerts:          ACTIVE ({args.alert_level})")
     print("=" * 70)
     print("Press Ctrl+C to terminate.")
 

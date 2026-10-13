@@ -106,6 +106,21 @@ Or run an interactive cinematic simulation of autonomous trading agents and prom
 python -m aetherguard.monitor --simulate
 ```
 
+### 4. Mobile Alerts (Telegram & Discord Webhooks)
+
+Receive instant mobile notifications whenever transactions are approved or adversarial prompt attacks are neutralized:
+
+```bash
+python -m aetherguard.gateway \
+  --port 8787 \
+  --discord-webhook "https://discord.com/api/webhooks/..." \
+  --telegram-token "BOT_TOKEN" \
+  --telegram-chat "CHAT_ID" \
+  --alert-level VIOLATIONS
+```
+
+Alert dispatch runs in detached background threads with **zero latency overhead** on the mathematical invariant engine.
+
 ---
 
 ## 🤖 Framework Integrations

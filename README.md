@@ -1,4 +1,4 @@
-[English](README.md) | [हिन्दी](docs/i18n/hi/README.md)
+[English](README.md) | [हिन्दी](docs/i18n/hi/README.md) | [Español](docs/i18n/es/README.md)
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/Ranjeet2063/aetherguard/main/assets/banner.png" alt="AetherGuard Banner" width="800" onerror="this.style.display='none'"/>

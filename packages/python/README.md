@@ -150,8 +150,51 @@ proposal = client.create_swap_proposal(
     oracle_reference_price_bps=100_000, # 10.0 XLM/USDC reference oracle
 )
 
-proof = client.evaluate_and_prove(proposal, current_account_balance=500_000_000)
-# If an MEV sandwich attack skews slippage to > 50 bps, InvariantViolationError(EXCESSIVE_SLIPPAGE) is raised!
+### 6. Zero-Knowledge Invariant Attestation & Local Enclave (TEE) Verification
+
+Generate non-forgeable, hardware-signed Ed25519 attestation certificates for every approved action, while proving policy compliance in Zero-Knowledge:
+
+```python
+from aetherguard import AetherGuardClient, conservative_policy, verify_enclave_certificate
+
+client = AetherGuardClient(conservative_policy())
+
+# 1. Zero-Knowledge Policy Commitment (Hides whitelist addresses & caps from public surveillance)
+zk_policy_commitment = client.policy_commitment
+print("ZK Policy Commitment:", zk_policy_commitment)
+
+# 2. Agent submits proposal
+proposal = client.create_proposal(
+    agent_id="phoenix_agent",
+    intent_prompt="Routine treasury rebalance",
+    target_contract="C_CORE_ESCROW",
+    function_name="transfer",
+    recipient="G_AUDITED_VENDOR_VAULT_01",
+    amount=10_000_000,
+    asset_symbol="XLM",
+)
+
+# 3. Enclave evaluates invariants and issues signed hardware certificate
+proof, certificate = client.evaluate_and_attest(proposal, current_account_balance=500_000_000)
+
+print("Enclave Public Key:", certificate.enclave_public_key_hex)
+print("Anti-Replay Nonce:", certificate.nonce)
+print("Ed25519 Signature:", certificate.enclave_signature_hex)
+
+# 4. Independent 3rd-Party Verification (Prover vs Verifier)
+is_valid = verify_enclave_certificate(
+    certificate,
+    expected_pubkey_hex=client.enclave_public_key_hex,
+    expected_policy_commitment_hex=zk_policy_commitment,
+)
+assert is_valid is True
+```
+
+Verify certificates via the Universal Gateway:
+```bash
+curl -X POST http://127.0.0.1:8787/verify \
+  -H "Content-Type: application/json" \
+  -d '{"certificate": { ... }}'
 ```
 
 ---

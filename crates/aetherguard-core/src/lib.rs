@@ -6,7 +6,10 @@ pub mod errors;
 pub mod invariants;
 pub mod proposals;
 
-pub use crypto::{compute_invariant_digest, EnclaveKeyVault};
+pub use crypto::{
+    compute_certificate_digest, compute_invariant_digest, compute_policy_commitment,
+    verify_enclave_certificate, EnclaveAttestationCertificate, EnclaveKeyVault,
+};
 pub use engine::AetherGuardEngine;
 pub use errors::AetherError;
 pub use invariants::{DefiSwapPolicy, InvariantPolicy, InvariantPolicyBuilder, ProofOfInvariant};
@@ -378,5 +381,97 @@ mod tests {
             }
             other => panic!("Expected OutputBelowFloor, got {:?}", other),
         }
+    }
+
+    #[test]
+    fn test_enclave_attestation_certificate_generation_and_independent_verification() {
+        let policy = create_test_policy();
+        let vault = EnclaveKeyVault::generate();
+        let enclave_pubkey = vault.public_key_hex();
+        let mut engine = AetherGuardEngine::new(policy, vault);
+
+        let proposal = AgentTransactionProposal::new(
+            "zk_agent_1",
+            "Valid transfer with hardware enclave attestation",
+            "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+            "swap_exact_tokens",
+            "GDQP2KPQGKIHYJGXNUIYOMHARUARCA7DJT5FO2FFOOKY3IF53Q7L5G6Z",
+            500_000_000,
+            "USDC",
+            1760000000,
+        );
+
+        let balance = 2_000_000_000;
+        let res = engine.evaluate_and_attest(&proposal, balance);
+        assert!(res.is_ok());
+
+        let (proof, cert) = res.unwrap();
+        assert_eq!(cert.proposal_id, proof.proposal_id);
+        assert_eq!(cert.enclave_public_key_hex, enclave_pubkey);
+        assert_eq!(cert.nonce, 1);
+
+        // Third-party independent verification without access to private key
+        let is_valid = verify_enclave_certificate(
+            &cert,
+            Some(&enclave_pubkey),
+            Some(&engine.policy_commitment()),
+        );
+        assert!(is_valid);
+    }
+
+    #[test]
+    fn test_zk_policy_commitment_tampering_rejected() {
+        let policy = create_test_policy();
+        let vault = EnclaveKeyVault::generate();
+        let mut engine = AetherGuardEngine::new(policy, vault);
+
+        let proposal = AgentTransactionProposal::new(
+            "zk_agent_2",
+            "Valid transfer",
+            "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+            "swap_exact_tokens",
+            "GDQP2KPQGKIHYJGXNUIYOMHARUARCA7DJT5FO2FFOOKY3IF53Q7L5G6Z",
+            100_000_000,
+            "USDC",
+            1760000000,
+        );
+
+        let balance = 1_000_000_000;
+        let (_, mut cert) = engine.evaluate_and_attest(&proposal, balance).unwrap();
+
+        // Adversary alters the policy commitment
+        cert.policy_commitment_hex = "0000000000000000000000000000000000000000000000000000000000000000".to_string();
+
+        let is_valid = verify_enclave_certificate(&cert, None, None);
+        assert!(!is_valid, "Tampered policy commitment must fail cryptographic verification");
+    }
+
+    #[test]
+    fn test_enclave_signature_tampering_rejected() {
+        let policy = create_test_policy();
+        let vault = EnclaveKeyVault::generate();
+        let mut engine = AetherGuardEngine::new(policy, vault);
+
+        let proposal = AgentTransactionProposal::new(
+            "zk_agent_3",
+            "Valid transfer",
+            "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+            "swap_exact_tokens",
+            "GDQP2KPQGKIHYJGXNUIYOMHARUARCA7DJT5FO2FFOOKY3IF53Q7L5G6Z",
+            100_000_000,
+            "USDC",
+            1760000000,
+        );
+
+        let balance = 1_000_000_000;
+        let (_, mut cert) = engine.evaluate_and_attest(&proposal, balance).unwrap();
+
+        // Adversary alters signature bytes
+        let mut sig_bytes = hex::decode(&cert.enclave_signature_hex).unwrap();
+        sig_bytes[0] ^= 0xFF;
+        cert.enclave_signature_hex = hex::encode(sig_bytes);
+
+        let is_valid = verify_enclave_certificate(&cert, None, None);
+        assert!(!is_valid, "Forged signature must fail cryptographic verification");
     }
 }

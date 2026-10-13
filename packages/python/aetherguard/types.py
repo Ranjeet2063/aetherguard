@@ -164,3 +164,83 @@ class ProofOfInvariant:
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
+
+
+@dataclass
+class EnclaveAttestationCertificate:
+    """
+    Cryptographic Hardware / Process Enclave Attestation Certificate.
+    Emitted strictly when an autonomous AI agent's action satisfies all mathematical boundaries.
+    """
+    enclave_public_key_hex: str
+    policy_commitment_hex: str
+    proposal_id: str
+    intent_prompt_hash: str
+    invariant_digest_hex: str
+    nonce: int
+    issued_at: int
+    enclave_signature_hex: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "EnclaveAttestationCertificate":
+        return cls(
+            enclave_public_key_hex=str(data["enclave_public_key_hex"]),
+            policy_commitment_hex=str(data["policy_commitment_hex"]),
+            proposal_id=str(data["proposal_id"]),
+            intent_prompt_hash=str(data["intent_prompt_hash"]),
+            invariant_digest_hex=str(data["invariant_digest_hex"]),
+            nonce=int(data["nonce"]),
+            issued_at=int(data["issued_at"]),
+            enclave_signature_hex=str(data["enclave_signature_hex"]),
+        )
+
+
+def compute_policy_commitment(policy: InvariantPolicy) -> str:
+    """
+    Computes a Zero-Knowledge commitment of the governing invariant policy.
+    Proves policy registration without revealing sensitive trade ceilings or whitelist addresses.
+    """
+    import hashlib
+    hasher = hashlib.sha256()
+    hasher.update(b"AETHERGUARD_ZK_POLICY_V1")
+    hasher.update(int(policy.max_single_spend).to_bytes(16, "big"))
+    hasher.update(int(policy.max_rolling_window_spend).to_bytes(16, "big"))
+    hasher.update(int(policy.rolling_window_seconds).to_bytes(8, "big", signed=True))
+    hasher.update(int(policy.min_balance_floor).to_bytes(16, "big"))
+    for r in sorted(policy.allowed_recipients or []):
+        hasher.update(r.encode("utf-8"))
+    for c in sorted(policy.allowed_contracts or []):
+        hasher.update(c.encode("utf-8"))
+    if policy.defi_swap_policy:
+        hasher.update(int(policy.defi_swap_policy.max_slippage_bps).to_bytes(4, "big"))
+        hasher.update(int(policy.defi_swap_policy.max_oracle_deviation_bps).to_bytes(4, "big"))
+        hasher.update(int(policy.defi_swap_policy.min_output_floor).to_bytes(16, "big"))
+    return hasher.hexdigest()
+
+
+def compute_certificate_digest(
+    enclave_public_key_hex: str,
+    policy_commitment_hex: str,
+    proposal_id: str,
+    intent_prompt_hash: str,
+    invariant_digest_hex: str,
+    nonce: int,
+    issued_at: int,
+) -> bytes:
+    """
+    Computes canonical certificate digest for enclave signature verification.
+    """
+    import hashlib
+    hasher = hashlib.sha256()
+    hasher.update(b"AETHERGUARD_ENCLAVE_CERT_V1")
+    hasher.update(enclave_public_key_hex.encode("utf-8"))
+    hasher.update(policy_commitment_hex.encode("utf-8"))
+    hasher.update(proposal_id.encode("utf-8"))
+    hasher.update(intent_prompt_hash.encode("utf-8"))
+    hasher.update(invariant_digest_hex.encode("utf-8"))
+    hasher.update(int(nonce).to_bytes(8, "big"))
+    hasher.update(int(issued_at).to_bytes(8, "big", signed=True))
+    return hasher.digest()

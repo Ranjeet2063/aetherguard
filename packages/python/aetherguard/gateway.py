@@ -11,8 +11,8 @@ import logging
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from typing import Optional
 
-from .client import AetherGuardClient
-from .types import InvariantPolicy, DefiSwapPolicy, SwapParameters
+from .client import AetherGuardClient, verify_enclave_certificate
+from .types import InvariantPolicy, DefiSwapPolicy, SwapParameters, EnclaveAttestationCertificate
 from .policy import conservative_policy
 from .errors import InvariantViolationError
 from .alerts import WebhookAlertManager, AlertLevel
@@ -75,6 +75,11 @@ class InvariantGatewayHandler(BaseHTTPRequestHandler):
             self._send_json(200, {
                 "stats": self.stats
             })
+        elif self.path == "/attestation/pubkey":
+            self._send_json(200, {
+                "enclave_public_key_hex": self.client.enclave_public_key_hex,
+                "policy_commitment_hex": self.client.policy_commitment,
+            })
         else:
             self._send_json(404, {"error": "Endpoint not found"})
 
@@ -91,6 +96,8 @@ class InvariantGatewayHandler(BaseHTTPRequestHandler):
 
         if self.path == "/evaluate":
             self._handle_evaluate(payload)
+        elif self.path == "/verify":
+            self._handle_verify(payload)
         elif self.path == "/policy":
             self._handle_update_policy(payload)
         elif self.path == "/reset":
@@ -139,7 +146,7 @@ class InvariantGatewayHandler(BaseHTTPRequestHandler):
         )
 
         try:
-            proof = self.client.evaluate_and_prove(proposal, current_account_balance=current_balance)
+            proof, cert = self.client.evaluate_and_attest(proposal, current_account_balance=current_balance)
             self.stats["approved"] += 1
             self.stats["total_spent"] += amount
 
@@ -150,6 +157,7 @@ class InvariantGatewayHandler(BaseHTTPRequestHandler):
                 "amount": str(amount),
                 "status": "APPROVED",
                 "digest": proof.invariant_digest_hex,
+                "nonce": cert.nonce,
             })
 
             if self.alert_manager:
@@ -171,6 +179,8 @@ class InvariantGatewayHandler(BaseHTTPRequestHandler):
                 "remaining_rolling_budget": proof.remaining_rolling_budget,
                 "invariant_digest_hex": proof.invariant_digest_hex,
                 "proof_status": proof.status,
+                "enclave_signature_hex": proof.enclave_signature_hex,
+                "certificate": cert.to_dict(),
             })
         except InvariantViolationError as violation:
             self.stats["blocked"] += 1
@@ -199,6 +209,39 @@ class InvariantGatewayHandler(BaseHTTPRequestHandler):
                 "reason": violation.reason.value,
                 "error": str(violation),
                 "details": violation.details,
+            })
+
+    def _handle_verify(self, payload: dict):
+        cert_data = payload.get("certificate") if isinstance(payload.get("certificate"), dict) else payload
+        expected_pubkey = payload.get("expected_pubkey_hex") or self.client.enclave_public_key_hex
+        expected_policy_commitment = payload.get("expected_policy_commitment_hex")
+
+        try:
+            cert = EnclaveAttestationCertificate.from_dict(cert_data)
+        except Exception as e:
+            self._send_json(400, {"is_valid": False, "error": f"Invalid certificate format: {e}"})
+            return
+
+        is_valid = verify_enclave_certificate(
+            cert,
+            expected_pubkey_hex=expected_pubkey,
+            expected_policy_commitment_hex=expected_policy_commitment,
+        )
+
+        if is_valid:
+            self._send_json(200, {
+                "is_valid": True,
+                "proposal_id": cert.proposal_id,
+                "nonce": cert.nonce,
+                "enclave_public_key_hex": cert.enclave_public_key_hex,
+                "policy_commitment_hex": cert.policy_commitment_hex,
+                "message": "Certificate independently verified against enclave attestation signature.",
+            })
+        else:
+            self._send_json(400, {
+                "is_valid": False,
+                "proposal_id": cert.proposal_id,
+                "error": "Enclave signature verification failed or parameter mismatch.",
             })
 
     def _handle_update_policy(self, payload: dict):

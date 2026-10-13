@@ -1,7 +1,7 @@
 /* Authorized Protocol Quality Assurance & Formal Verification Engine */
 
 import { describe, expect, it } from "bun:test";
-import { AetherGuardClient, InvariantViolationError } from "../src/index.js";
+import { AetherGuardClient, InvariantViolationError, verifyEnclaveCertificate } from "../src/index.js";
 
 describe("AetherGuardClient TypeScript SDK", () => {
   const samplePolicy = {
@@ -149,5 +149,39 @@ describe("AetherGuardClient TypeScript SDK", () => {
     expect(() => {
       client.evaluateAndProve(attackProposal, 500_000_000n);
     }).toThrow(/EXCESSIVE_SLIPPAGE/);
+  });
+
+  it("should issue and independently verify EnclaveAttestationCertificate", () => {
+    const client = new AetherGuardClient(samplePolicy);
+    const proposal = client.createProposal({
+      agentId: "agent-zk-test",
+      intentPrompt: "ZK verified transfer",
+      targetContract: "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+      functionName: "swap_exact_tokens",
+      recipient: "GDQP2KPQGKIHYJGXNUIYOMHARUARCA7DJT5FO2FFOOKY3IF53Q7L5G6Z",
+      amount: 10_000_000n,
+      assetSymbol: "XLM",
+    });
+
+    const { proof, certificate } = client.evaluateAndAttest(proposal, 500_000_000n);
+    expect(proof.status).toBe("APPROVED");
+    expect(certificate.nonce).toBe(1);
+    expect(certificate.enclavePublicKeyHex).toBe(client.getEnclavePublicKey());
+    expect(certificate.policyCommitmentHex).toBe(client.getPolicyCommitment());
+
+    // Independent verification
+    const isValid = verifyEnclaveCertificate(certificate, {
+      expectedPubkeyHex: client.getEnclavePublicKey(),
+      expectedPolicyCommitmentHex: client.getPolicyCommitment(),
+    });
+    expect(isValid).toBe(true);
+
+    // Tampered nonce rejected
+    const badNonceCert = { ...certificate, nonce: 999 };
+    expect(verifyEnclaveCertificate(badNonceCert)).toBe(false);
+
+    // Tampered signature rejected
+    const badSigCert = { ...certificate, enclaveSignatureHex: "00".repeat(64) };
+    expect(verifyEnclaveCertificate(badSigCert)).toBe(false);
   });
 });

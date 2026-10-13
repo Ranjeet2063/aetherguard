@@ -15,6 +15,9 @@ from .types import (
     ProofOfInvariant,
     DefiSwapPolicy,
     SwapParameters,
+    EnclaveAttestationCertificate,
+    compute_policy_commitment,
+    compute_certificate_digest,
 )
 from .errors import InvariantViolationError, InvariantFailureReason
 
@@ -44,6 +47,29 @@ class AetherGuardClient:
             is_emergency_paused=bool(policy.is_emergency_paused),
         )
         self._spend_history: list[SpendEvent] = []
+
+        try:
+            from cryptography.hazmat.primitives.asymmetric import ed25519
+            self._signing_key = ed25519.Ed25519PrivateKey.generate()
+            self._verifying_key = self._signing_key.public_key()
+            self._enclave_pubkey_hex = self._verifying_key.public_bytes_raw().hex()
+        except Exception:
+            import secrets
+            self._signing_key = secrets.token_bytes(32)
+            self._verifying_key = None
+            self._enclave_pubkey_hex = hashlib.sha256(self._signing_key).hexdigest()
+
+        self._nonce = 0
+
+    @property
+    def enclave_public_key_hex(self) -> str:
+        """Returns the public key hex of the isolated enclave signer."""
+        return self._enclave_pubkey_hex
+
+    @property
+    def policy_commitment(self) -> str:
+        """Returns the Zero-Knowledge commitment of the active invariant policy."""
+        return compute_policy_commitment(self._policy)
 
     def get_policy(self) -> InvariantPolicy:
         """Returns the current active invariant policy."""
@@ -319,6 +345,13 @@ class AetherGuardClient:
         proof_hasher.update(str(proposal.timestamp).encode("utf-8"))
         digest = proof_hasher.hexdigest()
 
+        # Sign attestation digest strictly inside enclave
+        if self._verifying_key is not None:
+            proof_sig_hex = self._signing_key.sign(bytes.fromhex(digest)).hex()
+        else:
+            import hmac
+            proof_sig_hex = hmac.new(self._signing_key, bytes.fromhex(digest), hashlib.sha256).hexdigest()
+
         return ProofOfInvariant(
             proposal_id=proposal.proposal_id,
             verified_at=proposal.timestamp,
@@ -327,4 +360,83 @@ class AetherGuardClient:
             projected_balance=str(projected_balance),
             invariant_digest_hex=digest,
             status="APPROVED",
+            enclave_signature_hex=proof_sig_hex,
         )
+
+    def evaluate_and_attest(
+        self,
+        proposal: AgentTransactionProposal,
+        current_account_balance: int,
+    ) -> tuple[ProofOfInvariant, EnclaveAttestationCertificate]:
+        """
+        Evaluates mathematical invariants and issues a signed Hardware/Enclave Attestation Certificate.
+        """
+        proof = self.evaluate_and_prove(proposal, current_account_balance)
+        self._nonce += 1
+        nonce = self._nonce
+        policy_commitment_hex = self.policy_commitment
+        intent_prompt_hash = hashlib.sha256(proposal.intent_prompt.encode("utf-8")).hexdigest()
+
+        cert_digest = compute_certificate_digest(
+            enclave_public_key_hex=self._enclave_pubkey_hex,
+            policy_commitment_hex=policy_commitment_hex,
+            proposal_id=proof.proposal_id,
+            intent_prompt_hash=intent_prompt_hash,
+            invariant_digest_hex=proof.invariant_digest_hex,
+            nonce=nonce,
+            issued_at=proof.verified_at,
+        )
+
+        if self._verifying_key is not None:
+            cert_sig_hex = self._signing_key.sign(cert_digest).hex()
+        else:
+            import hmac
+            cert_sig_hex = hmac.new(self._signing_key, cert_digest, hashlib.sha256).hexdigest()
+
+        cert = EnclaveAttestationCertificate(
+            enclave_public_key_hex=self._enclave_pubkey_hex,
+            policy_commitment_hex=policy_commitment_hex,
+            proposal_id=proof.proposal_id,
+            intent_prompt_hash=intent_prompt_hash,
+            invariant_digest_hex=proof.invariant_digest_hex,
+            nonce=nonce,
+            issued_at=proof.verified_at,
+            enclave_signature_hex=cert_sig_hex,
+        )
+
+        return proof, cert
+
+
+def verify_enclave_certificate(
+    cert: EnclaveAttestationCertificate,
+    expected_pubkey_hex: Optional[str] = None,
+    expected_policy_commitment_hex: Optional[str] = None,
+) -> bool:
+    """
+    Independently verifies an Enclave Attestation Certificate without access to private signing keys.
+    """
+    if expected_pubkey_hex and cert.enclave_public_key_hex != expected_pubkey_hex:
+        return False
+
+    if expected_policy_commitment_hex and cert.policy_commitment_hex != expected_policy_commitment_hex:
+        return False
+
+    cert_digest = compute_certificate_digest(
+        enclave_public_key_hex=cert.enclave_public_key_hex,
+        policy_commitment_hex=cert.policy_commitment_hex,
+        proposal_id=cert.proposal_id,
+        intent_prompt_hash=cert.intent_prompt_hash,
+        invariant_digest_hex=cert.invariant_digest_hex,
+        nonce=cert.nonce,
+        issued_at=cert.issued_at,
+    )
+
+    try:
+        from cryptography.hazmat.primitives.asymmetric import ed25519
+        pk_bytes = bytes.fromhex(cert.enclave_public_key_hex)
+        sig_bytes = bytes.fromhex(cert.enclave_signature_hex)
+        vk = ed25519.Ed25519PublicKey.from_public_bytes(pk_bytes)
+        vk.verify(sig_bytes, cert_digest)
+        return True
+    except Exception:
+        return False

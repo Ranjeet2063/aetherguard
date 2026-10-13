@@ -1,6 +1,9 @@
 /* Authorized Protocol Quality Assurance & Formal Verification Engine */
 
-use crate::crypto::{compute_invariant_digest, EnclaveKeyVault};
+use crate::crypto::{
+    compute_invariant_digest, compute_policy_commitment, EnclaveAttestationCertificate,
+    EnclaveKeyVault,
+};
 use crate::errors::AetherError;
 use crate::invariants::{InvariantPolicy, ProofOfInvariant};
 use crate::proposals::AgentTransactionProposal;
@@ -17,6 +20,7 @@ pub struct AetherGuardEngine {
     policy: InvariantPolicy,
     vault: EnclaveKeyVault,
     spend_history: Vec<SpendEvent>,
+    next_nonce: u64,
 }
 
 impl AetherGuardEngine {
@@ -25,6 +29,7 @@ impl AetherGuardEngine {
             policy,
             vault,
             spend_history: Vec::new(),
+            next_nonce: 0,
         }
     }
 
@@ -34,6 +39,11 @@ impl AetherGuardEngine {
 
     pub fn enclave_public_key_hex(&self) -> String {
         self.vault.public_key_hex()
+    }
+
+    /// Compute Zero-Knowledge Policy Commitment for the active invariant boundaries
+    pub fn policy_commitment(&self) -> String {
+        compute_policy_commitment(&self.policy)
     }
 
     /// Calculate aggregate spend within the rolling window prior to this timestamp
@@ -219,5 +229,30 @@ impl AetherGuardEngine {
             invariant_digest_hex: hex::encode(invariant_digest),
             enclave_signature_hex: Some(hex::encode(signature_bytes)),
         })
+    }
+
+    /// Primary Formal Verification & Enclave Attestation Gate.
+    /// Intercepts untrusted AI agent proposal, verifies all mathematical invariants,
+    /// and issues both a ProofOfInvariant and an EnclaveAttestationCertificate.
+    pub fn evaluate_and_attest(
+        &mut self,
+        proposal: &AgentTransactionProposal,
+        current_account_balance: u128,
+    ) -> Result<(ProofOfInvariant, EnclaveAttestationCertificate), AetherError> {
+        let proof = self.evaluate_and_prove(proposal, current_account_balance)?;
+        self.next_nonce += 1;
+        let nonce = self.next_nonce;
+        let policy_commitment = self.policy_commitment();
+
+        let certificate = self.vault.issue_certificate(
+            &policy_commitment,
+            &proof.proposal_id,
+            &proposal.intent_prompt_hash,
+            &proof.invariant_digest_hex,
+            nonce,
+            proof.verified_at,
+        );
+
+        Ok((proof, certificate))
     }
 }

@@ -56,3 +56,4 @@ jobs:
           python packages/python/examples/curl_agent_demo.py
           python packages/python/examples/webhook_alert_demo.py
           python packages/python/examples/defi_swap_protection_demo.py
+          python packages/python/examples/zk_attestation_verification_demo.py

@@ -10,6 +10,8 @@ from .types import (
     ProofOfInvariant,
     DefiSwapPolicy,
     SwapParameters,
+    EnclaveAttestationCertificate,
+    compute_policy_commitment,
 )
 from .errors import InvariantViolationError, InvariantFailureReason, AetherGuardError
 from .policy import (
@@ -19,7 +21,7 @@ from .policy import (
     micropayment_policy,
     defi_arbitrage_policy,
 )
-from .client import AetherGuardClient
+from .client import AetherGuardClient, verify_enclave_certificate
 from .gateway import run_gateway, InvariantGatewayHandler
 from .alerts import WebhookAlertManager, AlertLevel
 
@@ -39,6 +41,9 @@ __all__ = [
     "ProofOfInvariant",
     "DefiSwapPolicy",
     "SwapParameters",
+    "EnclaveAttestationCertificate",
+    "compute_policy_commitment",
+    "verify_enclave_certificate",
     "InvariantViolationError",
     "InvariantFailureReason",
     "AetherGuardError",

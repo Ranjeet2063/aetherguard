@@ -1,11 +1,22 @@
 /* Authorized Protocol Quality Assurance & Formal Verification Engine */
 
-import { createHash } from "node:crypto";
+import {
+  createHash,
+  generateKeyPairSync,
+  sign,
+  verify,
+  createPublicKey,
+  type KeyObject,
+} from "node:crypto";
 import {
   type AgentTransactionProposal,
   type InvariantPolicy,
   InvariantViolationError,
   type ProofOfInvariant,
+  type EnclaveAttestationCertificate,
+  type SwapParameters,
+  computePolicyCommitment,
+  computeCertificateDigest,
 } from "./types.js";
 
 interface SpendEvent {
@@ -16,6 +27,9 @@ interface SpendEvent {
 export class AetherGuardClient {
   private policy: InvariantPolicy;
   private spendHistory: SpendEvent[] = [];
+  private enclaveKeyPair: { publicKey: KeyObject; privateKey: KeyObject };
+  private enclavePublicKeyHex: string;
+  private nonce = 0;
 
   constructor(policy: InvariantPolicy) {
     this.policy = {
@@ -25,6 +39,9 @@ export class AetherGuardClient {
       allowedFunctions: policy.allowedFunctions || [],
       isEmergencyPaused: policy.isEmergencyPaused ?? false,
     };
+    this.enclaveKeyPair = generateKeyPairSync("ed25519");
+    const spkiDer = this.enclaveKeyPair.publicKey.export({ type: "spki", format: "der" });
+    this.enclavePublicKeyHex = spkiDer.subarray(spkiDer.length - 32).toString("hex");
   }
 
   public getPolicy(): Readonly<InvariantPolicy> {
@@ -258,6 +275,8 @@ export class AetherGuardClient {
       .update(proposal.timestamp.toString())
       .digest("hex");
 
+    const proofSig = sign(null, Buffer.from(digest, "hex"), this.enclaveKeyPair.privateKey).toString("hex");
+
     return {
       proposalId: proposal.proposalId,
       verifiedAt: proposal.timestamp,
@@ -266,6 +285,90 @@ export class AetherGuardClient {
       projectedBalance: projectedBalance.toString(),
       invariantDigestHex: digest,
       status: "APPROVED",
+      enclaveSignatureHex: proofSig,
     };
+  }
+
+  public getEnclavePublicKey(): string {
+    return this.enclavePublicKeyHex;
+  }
+
+  public getPolicyCommitment(): string {
+    return computePolicyCommitment(this.policy);
+  }
+
+  public evaluateAndAttest(
+    proposal: AgentTransactionProposal,
+    currentAccountBalance: bigint
+  ): { proof: ProofOfInvariant; certificate: EnclaveAttestationCertificate } {
+    const proof = this.evaluateAndProve(proposal, currentAccountBalance);
+    this.nonce += 1;
+    const currentNonce = this.nonce;
+    const policyCommitmentHex = this.getPolicyCommitment();
+    const intentPromptHash = createHash("sha256").update(proposal.intentPrompt).digest("hex");
+
+    const certDigest = computeCertificateDigest({
+      enclavePublicKeyHex: this.enclavePublicKeyHex,
+      policyCommitmentHex,
+      proposalId: proof.proposalId,
+      intentPromptHash,
+      invariantDigestHex: proof.invariantDigestHex,
+      nonce: currentNonce,
+      issuedAt: proof.verifiedAt,
+    });
+
+    const certSig = sign(null, certDigest, this.enclaveKeyPair.privateKey).toString("hex");
+
+    const certificate: EnclaveAttestationCertificate = {
+      enclavePublicKeyHex: this.enclavePublicKeyHex,
+      policyCommitmentHex,
+      proposalId: proof.proposalId,
+      intentPromptHash,
+      invariantDigestHex: proof.invariantDigestHex,
+      nonce: currentNonce,
+      issuedAt: proof.verifiedAt,
+      enclaveSignatureHex: certSig,
+    };
+
+    return { proof, certificate };
+  }
+}
+
+export function verifyEnclaveCertificate(
+  cert: EnclaveAttestationCertificate,
+  options?: {
+    expectedPubkeyHex?: string;
+    expectedPolicyCommitmentHex?: string;
+  }
+): boolean {
+  if (options?.expectedPubkeyHex && cert.enclavePublicKeyHex !== options.expectedPubkeyHex) {
+    return false;
+  }
+  if (
+    options?.expectedPolicyCommitmentHex &&
+    cert.policyCommitmentHex !== options.expectedPolicyCommitmentHex
+  ) {
+    return false;
+  }
+
+  try {
+    const certDigest = computeCertificateDigest({
+      enclavePublicKeyHex: cert.enclavePublicKeyHex,
+      policyCommitmentHex: cert.policyCommitmentHex,
+      proposalId: cert.proposalId,
+      intentPromptHash: cert.intentPromptHash,
+      invariantDigestHex: cert.invariantDigestHex,
+      nonce: cert.nonce,
+      issuedAt: cert.issuedAt,
+    });
+
+    const rawPub = Buffer.from(cert.enclavePublicKeyHex, "hex");
+    const spki = Buffer.concat([Buffer.from("302a300506032b6570032100", "hex"), rawPub]);
+    const pubKeyObj = createPublicKey({ key: spki, format: "der", type: "spki" });
+    const sigBytes = Buffer.from(cert.enclaveSignatureHex, "hex");
+
+    return verify(null, certDigest, pubKeyObj, sigBytes);
+  } catch {
+    return false;
   }
 }

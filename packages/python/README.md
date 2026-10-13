@@ -74,6 +74,26 @@ proof = client.evaluate_and_prove(proposal, current_balance)
 print(f"Transaction Approved! Cryptographic Proof: {proof.invariant_digest_hex}")
 ```
 
+### 2. Universal Local HTTP Invariant Gateway (Zero Code / Zero SDK)
+
+Run the local Invariant Gateway daemon:
+```bash
+python -m aetherguard.gateway --port 8787
+```
+
+Any autonomous AI agent (Python, JS/Node, Go, or cURL) can audit operations over local HTTP:
+```bash
+curl -X POST http://127.0.0.1:8787/evaluate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "agent_id": "claude-analyst",
+    "recipient": "GBBQSMW3W6H557ZTRG36X2WCKW3ZTXQ33TIX4X4C642N5Y5S2G2T75S4",
+    "amount": 30000000
+  }'
+```
+* **Approved (200 OK)**: Returns cryptographic proof digest and projected reserve balance.
+* **Violation (403 Forbidden)**: Immediately blocks adversarial prompt injection before touching the network.
+
 ---
 
 ## 🤖 Framework Integrations

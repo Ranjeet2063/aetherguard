@@ -13,8 +13,9 @@ from .policy import (
     micropayment_policy,
 )
 from .client import AetherGuardClient
+from .gateway import run_gateway, InvariantGatewayHandler
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "InvariantPolicy",
@@ -28,4 +29,6 @@ __all__ = [
     "conservative_policy",
     "micropayment_policy",
     "AetherGuardClient",
+    "run_gateway",
+    "InvariantGatewayHandler",
 ]

@@ -94,6 +94,18 @@ curl -X POST http://127.0.0.1:8787/evaluate \
 * **Approved (200 OK)**: Returns cryptographic proof digest and projected reserve balance.
 * **Violation (403 Forbidden)**: Immediately blocks adversarial prompt injection before touching the network.
 
+### 3. Live Terminal TUI Activity Monitor & Radar
+
+Launch the live ANSI visual radar dashboard connected to a running gateway:
+```bash
+python -m aetherguard.monitor --url http://127.0.0.1:8787
+```
+
+Or run an interactive cinematic simulation of autonomous trading agents and prompt injection attacks intercepted in real time:
+```bash
+python -m aetherguard.monitor --simulate
+```
+
 ---
 
 ## 🤖 Framework Integrations

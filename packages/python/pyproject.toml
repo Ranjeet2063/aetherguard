@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aetherguard"
-version = "0.1.0"
+version = "0.2.0"
 description = "Mathematical Invariant Firewall and Financial OS for Autonomous AI Agents"
 readme = "README.md"
 authors = [{ name = "Ranjeet2063", email = "ranjeet2063@users.noreply.github.com" }]

@@ -25,6 +25,13 @@ class InvariantGatewayHandler(BaseHTTPRequestHandler):
     """
     client: AetherGuardClient = None
     default_balance: int = 500_000_000  # Default simulated balance: 50 XLM in stroops
+    event_history: list[dict] = []
+    stats: dict = {
+        "total_evaluated": 0,
+        "approved": 0,
+        "blocked": 0,
+        "total_spent": 0,
+    }
 
     def _send_json(self, status_code: int, data: dict):
         response_bytes = json.dumps(data, indent=2).encode("utf-8")
@@ -58,6 +65,14 @@ class InvariantGatewayHandler(BaseHTTPRequestHandler):
             self._send_json(200, {
                 "policy": self.client.get_policy().to_dict()
             })
+        elif self.path == "/events":
+            self._send_json(200, {
+                "events": self.event_history[-50:]
+            })
+        elif self.path == "/stats":
+            self._send_json(200, {
+                "stats": self.stats
+            })
         else:
             self._send_json(404, {"error": "Endpoint not found"})
 
@@ -78,7 +93,9 @@ class InvariantGatewayHandler(BaseHTTPRequestHandler):
             self._handle_update_policy(payload)
         elif self.path == "/reset":
             self.client.reset_history()
-            self._send_json(200, {"message": "Spend history reset successfully"})
+            self.event_history.clear()
+            self.stats = {"total_evaluated": 0, "approved": 0, "blocked": 0, "total_spent": 0}
+            self._send_json(200, {"message": "Spend history and telemetry reset successfully"})
         else:
             self._send_json(404, {"error": "Endpoint not found"})
 
@@ -97,6 +114,8 @@ class InvariantGatewayHandler(BaseHTTPRequestHandler):
             self._send_json(400, {"error": "Invalid amount: must be an integer"})
             return
 
+        self.stats["total_evaluated"] += 1
+
         proposal = self.client.create_proposal(
             agent_id=agent_id,
             intent_prompt=payload.get("intent_prompt", f"Gateway transfer of {amount} to {recipient}"),
@@ -109,6 +128,18 @@ class InvariantGatewayHandler(BaseHTTPRequestHandler):
 
         try:
             proof = self.client.evaluate_and_prove(proposal, current_account_balance=current_balance)
+            self.stats["approved"] += 1
+            self.stats["total_spent"] += amount
+
+            self.event_history.append({
+                "timestamp": proof.verified_at,
+                "agent_id": agent_id,
+                "recipient": recipient,
+                "amount": str(amount),
+                "status": "APPROVED",
+                "digest": proof.invariant_digest_hex,
+            })
+
             self._send_json(200, {
                 "status": "APPROVED",
                 "proposal_id": proof.proposal_id,
@@ -120,6 +151,17 @@ class InvariantGatewayHandler(BaseHTTPRequestHandler):
                 "proof_status": proof.status,
             })
         except InvariantViolationError as violation:
+            self.stats["blocked"] += 1
+
+            self.event_history.append({
+                "timestamp": proposal.timestamp,
+                "agent_id": agent_id,
+                "recipient": recipient,
+                "amount": str(amount),
+                "status": "BLOCKED",
+                "reason": violation.reason.value,
+            })
+
             self._send_json(403, {
                 "status": "BLOCKED",
                 "reason": violation.reason.value,

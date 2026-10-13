@@ -100,6 +100,36 @@ class TestInvariantGateway(unittest.TestCase):
         self.assertEqual(body.get("status"), "BLOCKED")
         self.assertEqual(body.get("reason"), "UNAUTHORIZED_RECIPIENT")
 
+    def test_events_and_stats(self):
+        status, stats_body = self._request("GET", "/stats")
+        self.assertEqual(status, 200)
+        stats = stats_body.get("stats", {})
+        self.assertGreater(stats.get("total_evaluated", 0), 0)
+        self.assertGreater(stats.get("approved", 0), 0)
+        self.assertGreater(stats.get("blocked", 0), 0)
+
+        status_ev, events_body = self._request("GET", "/events")
+        self.assertEqual(status_ev, 200)
+        events = events_body.get("events", [])
+        self.assertGreater(len(events), 0)
+
+        # Test render_dashboard formatting
+        from aetherguard import render_dashboard
+        render_dashboard(
+            policy={"max_single_spend": 1000, "max_rolling_window_spend": 3000, "min_balance_floor": 500},
+            stats=stats,
+            events=events,
+            single_frame=True,
+        )
+
+    def test_reset(self):
+        status, body = self._request("POST", "/reset")
+        self.assertEqual(status, 200)
+
+        status_ev, events_body = self._request("GET", "/events")
+        self.assertEqual(status_ev, 200)
+        self.assertEqual(len(events_body.get("events", [])), 0)
+
 
 if __name__ == "__main__":
     unittest.main()

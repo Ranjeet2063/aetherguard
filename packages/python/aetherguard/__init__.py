@@ -17,6 +17,14 @@ from .gateway import run_gateway, InvariantGatewayHandler
 
 __version__ = "0.2.0"
 
+
+def __getattr__(name: str):
+    if name == "render_dashboard":
+        from .monitor import render_dashboard
+        return render_dashboard
+    raise AttributeError(f"module 'aetherguard' has no attribute '{name}'")
+
+
 __all__ = [
     "InvariantPolicy",
     "AgentTransactionProposal",
@@ -31,4 +39,5 @@ __all__ = [
     "AetherGuardClient",
     "run_gateway",
     "InvariantGatewayHandler",
+    "render_dashboard",
 ]

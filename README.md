@@ -1,4 +1,4 @@
-[English](README.md) | [हिन्दी](docs/i18n/hi/README.md)
+[English](README.md) | [हिन्दी](docs/i18n/hi/README.md) | [Español](docs/i18n/es/README.md)
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/Ranjeet2063/aetherguard/main/assets/banner.png" alt="AetherGuard Banner" width="800" onerror="this.style.display='none'"/>
@@ -215,6 +215,16 @@ We are building the open-source future of autonomous agent financial safety on S
 - ⏱️ **24-Hour Review SLA**: Maintainers review and give feedback on PRs within 24 hours.
 - 🏆 **Wall of Fame & Gold Stars**: Every contributor is permanently recognized in our README and releases.
 - 📖 **Quick Setup**: Read our step-by-step onboarding guide in [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+---
+
+## 🌟 Wall of Fame (Contributors)
+
+Special thanks to the amazing developers building the future of autonomous agent financial safety with us:
+
+| Contributor | Contribution | Badges |
+| :--- | :--- | :--- |
+| **Sayan Pal** ([@palSayan1000](https://github.com/palSayan1000)) | Hindi & Spanish i18n Documentation ([#52](https://github.com/Ranjeet2063/aetherguard/pull/52), [#53](https://github.com/Ranjeet2063/aetherguard/pull/53)) | 🌟 First Contributor • 🌐 Polyglot |
 
 ---
 

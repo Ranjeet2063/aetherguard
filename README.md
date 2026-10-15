@@ -123,6 +123,8 @@ cargo run -p aetherguard-cli -- demo
     • Enclave State:         Private keys locked. Zero exposure.
 ```
 
+> 📖 **Ready to protect your own agent?** Follow the [5-Minute Quickstart](docs/getting_started/quickstart.md) to install AetherGuard, define a policy, and watch a malicious spend get blocked.
+
 ---
 
 ## 📦 Packages & Distribution (Published Live)

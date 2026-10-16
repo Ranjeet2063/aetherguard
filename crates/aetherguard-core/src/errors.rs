@@ -22,6 +22,12 @@ pub enum AetherError {
         required_floor: u128,
     },
 
+    #[error("Arithmetic Failure: Account balance {current_balance} insufficient for spend of {attempted_spend}")]
+    InsufficientBalance {
+        current_balance: u128,
+        attempted_spend: u128,
+    },
+
     #[error("Boundary Security Failure: Target contract '{contract}' is not in the authorized contract whitelist")]
     UnauthorizedContract { contract: String },
 

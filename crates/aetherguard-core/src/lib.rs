@@ -5,6 +5,7 @@ pub mod engine;
 pub mod errors;
 pub mod invariants;
 pub mod proposals;
+pub mod zk_proof;
 
 pub use crypto::{
     compute_certificate_digest, compute_invariant_digest, compute_policy_commitment,
@@ -14,6 +15,10 @@ pub use engine::AetherGuardEngine;
 pub use errors::AetherError;
 pub use invariants::{DefiSwapPolicy, InvariantPolicy, InvariantPolicyBuilder, ProofOfInvariant};
 pub use proposals::{AgentTransactionProposal, SwapParameters};
+pub use zk_proof::{
+    generate_zk_solvency_attestation, FormalStateAccumulator, ValueCommitment, ZkRangeProof,
+    ZkSolvencyAttestation, ZkUpperBoundProof,
+};
 
 #[cfg(test)]
 mod tests {
@@ -473,5 +478,119 @@ mod tests {
 
         let is_valid = verify_enclave_certificate(&cert, None, None);
         assert!(!is_valid, "Forged signature must fail cryptographic verification");
+    }
+
+    #[test]
+    fn test_zk_solvency_attestation_generation_and_verification() {
+        let policy = create_test_policy();
+        let vault = EnclaveKeyVault::generate();
+
+        let current_balance = 2_000_000_000; // 200 USDC
+        let spend_amount = 500_000_000; // 50 USDC
+        let proposal_id = "zk_prop_001";
+        let nonce = 1;
+        let timestamp = 1760000000;
+
+        let attestation = generate_zk_solvency_attestation(
+            &vault,
+            &policy,
+            proposal_id,
+            current_balance,
+            spend_amount,
+            nonce,
+            timestamp,
+        )
+        .expect("ZK solvency attestation generation must succeed for valid parameters");
+
+        // Verify attestation
+        assert!(attestation.verify(None, None));
+        assert!(attestation.verify(Some(&attestation.policy_commitment_hex), Some(&vault.public_key_hex())));
+
+        // Tampered nonce fails verification
+        let mut tampered = attestation.clone();
+        tampered.nonce = 999;
+        assert!(!tampered.verify(None, None));
+    }
+
+    #[test]
+    fn test_zk_solvency_floor_breach_fails_proof_generation() {
+        let policy = create_test_policy();
+        let vault = EnclaveKeyVault::generate();
+
+        // Balance 60 USDC, spend 20 USDC -> Projected balance 40 USDC (below floor 50 USDC)
+        let current_balance = 600_000_000;
+        let spend_amount = 200_000_000;
+
+        let result = generate_zk_solvency_attestation(
+            &vault,
+            &policy,
+            "zk_fail_01",
+            current_balance,
+            spend_amount,
+            1,
+            1760000000,
+        );
+
+        assert!(matches!(result, Err(AetherError::BalanceFloorBreached { .. })));
+    }
+
+    #[test]
+    fn test_zk_single_spend_cap_breach_fails_proof_generation() {
+        let policy = create_test_policy();
+        let vault = EnclaveKeyVault::generate();
+
+        // Attempting to spend 150 USDC (exceeds single spend cap 100 USDC)
+        let current_balance = 5_000_000_000;
+        let spend_amount = 1_500_000_000;
+
+        let result = generate_zk_solvency_attestation(
+            &vault,
+            &policy,
+            "zk_fail_02",
+            current_balance,
+            spend_amount,
+            1,
+            1760000000,
+        );
+
+        assert!(matches!(result, Err(AetherError::SingleSpendCapExceeded { .. })));
+    }
+
+    #[test]
+    fn test_formal_state_accumulator_lineage_verification() {
+        let policy = create_test_policy();
+        let vault = EnclaveKeyVault::generate();
+
+        let mut acc = FormalStateAccumulator::genesis();
+        let mut attestations = Vec::new();
+
+        let mut balance = 5_000_000_000;
+        let spend = 100_000_000;
+
+        for i in 1..=5 {
+            let att = generate_zk_solvency_attestation(
+                &vault,
+                &policy,
+                &format!("prop_{i}"),
+                balance,
+                spend,
+                i as u64,
+                1760000000 + i as i64,
+            )
+            .unwrap();
+
+            balance -= spend;
+            acc.accumulate(&att);
+            attestations.push(att);
+        }
+
+        assert_eq!(acc.transition_count, 5);
+        // Verify lineage from genesis to final state root
+        assert!(FormalStateAccumulator::verify_lineage(&attestations, &acc.state_root));
+
+        // Replay or skipped nonce fails lineage verification
+        let mut corrupted_attestations = attestations.clone();
+        corrupted_attestations[2].nonce = 10;
+        assert!(!FormalStateAccumulator::verify_lineage(&corrupted_attestations, &acc.state_root));
     }
 }

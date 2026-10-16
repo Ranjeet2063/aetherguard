@@ -3,16 +3,21 @@
 AetherGuard Agent Framework Integrations (LangChain, CrewAI, LlamaIndex, AutoGPT).
 """
 
-from .langchain import guard_tool, AetherGuardLangChainTool
-from .crewai import CrewAIGuard
-from .llamaindex import guard_llamaindex_tool, AetherGuardLlamaIndexTool
 from .autogpt import AutoGPTGuard
+from .crewai import CrewAIGuard
+from .langchain import AetherGuardLangChainTool, guard_tool
+from .llamaindex import (
+    AetherGuardLlamaIndexTool,
+    LlamaIndexActionGuard,
+    guard_llamaindex_tool,
+)
 
 __all__ = [
-    "guard_tool",
     "AetherGuardLangChainTool",
-    "CrewAIGuard",
-    "guard_llamaindex_tool",
     "AetherGuardLlamaIndexTool",
     "AutoGPTGuard",
+    "CrewAIGuard",
+    "LlamaIndexActionGuard",
+    "guard_llamaindex_tool",
+    "guard_tool",
 ]

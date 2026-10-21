@@ -228,6 +228,12 @@ Special thanks to the amazing developers building the future of autonomous agent
 
 ---
 
+## 🔒 Security
+
+Please review our [`SECURITY.md`](SECURITY.md) for the threat model, supported versions, and responsible vulnerability disclosure policy (24-hour response SLA + Security Hall of Fame).
+
+---
+
 ## 📜 License
 
 Licensed under either of:

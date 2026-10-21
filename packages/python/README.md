@@ -248,6 +248,33 @@ def retrieve_and_pay(chunk_id: str, recipient: str, amount: int):
     return pay_oracle_for_chunk(chunk_id, recipient, amount)
 ```
 
+To receive the signed proof and certificate alongside a tool result, wrap a callable
+with `LlamaIndexActionGuard`. Both calls verify the action before executing the tool.
+`execute_with_attestation` returns `(tool_result, proof, certificate)`; normal
+`guard(...)` calls return only the tool result. A rejected action raises
+`InvariantViolationError` without calling the tool.
+
+```python
+from aetherguard import verify_enclave_certificate
+from aetherguard.integrations import LlamaIndexActionGuard
+
+def pay_for_chunk(chunk_id: str, recipient: str, amount: int):
+    return pay_oracle_for_chunk(chunk_id, recipient, amount)
+
+guard = LlamaIndexActionGuard(
+    pay_for_chunk, client=client, balance_provider=get_wallet_balance
+)
+result, proof, certificate = guard.execute_with_attestation(
+    chunk_id="doc-1", recipient="GBXY...", amount=1000
+)
+assert verify_enclave_certificate(
+    certificate,
+    expected_pubkey_hex=client.enclave_public_key_hex,
+    expected_policy_commitment_hex=client.policy_commitment,
+)
+# The explicit method exposes the signed evidence to the caller.
+```
+
 ### AutoGPT Command Interceptor
 
 ```python

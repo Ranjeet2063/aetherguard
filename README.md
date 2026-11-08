@@ -11,6 +11,7 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/Ranjeet2063/homebrew-tap"><img src="https://img.shields.io/badge/Homebrew-brew%20install%20aetherguard-FBB040?style=for-the-badge&logo=homebrew&logoColor=white" /></a>
   <a href="https://github.com/Ranjeet2063/aetherguard/actions"><img src="https://img.shields.io/badge/CI-100%25%20Passing-brightgreen?style=for-the-badge&logo=githubactions&logoColor=white" /></a>
   <a href="https://github.com/Ranjeet2063/aetherguard/releases/tag/v0.1.0"><img src="https://img.shields.io/badge/Release-v0.1.0-blue?style=for-the-badge&logo=github&logoColor=white" /></a>
   <a href="https://www.npmjs.com/package/aetherguard-sdk"><img src="https://img.shields.io/badge/npm-aetherguard--sdk-red?style=for-the-badge&logo=npm&logoColor=white" /></a>
@@ -91,14 +92,18 @@ flowchart TD
 
 ## 🚀 3-Second Quickstart
 
-Experience the sub-millisecond defense simulation in your terminal:
-
+### Option 1: 1-Line Universal Install via Homebrew (macOS & Linux)
 ```bash
-# Clone the repository
+brew tap Ranjeet2063/tap && brew install aetherguard
+
+# Run the live interactive attack interception simulation
+aetherguard demo
+```
+
+### Option 2: Build From Source
+```bash
 git clone https://github.com/Ranjeet2063/aetherguard.git
 cd aetherguard
-
-# Run the live interactive simulation
 cargo run -p aetherguard-cli -- demo
 ```
 
@@ -129,6 +134,7 @@ cargo run -p aetherguard-cli -- demo
 
 | Package | Ecosystem | Install Command | Live Registry |
 |---|---|---|---|
+| [`aetherguard`](crates/aetherguard-cli) | Homebrew (macOS / Linux) | `brew tap Ranjeet2063/tap && brew install aetherguard` | [![Homebrew](https://img.shields.io/badge/Homebrew-Tap-FBB040?logo=homebrew&logoColor=white)](https://github.com/Ranjeet2063/homebrew-tap) |
 | [`aetherguard-sdk`](packages/sdk) | TypeScript / Bun / Node | `npm i aetherguard-sdk` | [![npm](https://img.shields.io/npm/v/aetherguard-sdk?color=red)](https://www.npmjs.com/package/aetherguard-sdk) |
 | [`aetherguard-mcp`](packages/mcp-server) | Claude / Cursor / MCP | `npx aetherguard-mcp` | [![npm](https://img.shields.io/npm/v/aetherguard-mcp?color=cb3837)](https://www.npmjs.com/package/aetherguard-mcp) |
 | [`aetherguard-eliza-plugin`](packages/eliza-plugin) | ElizaOS Autonomous Agents | `npm i aetherguard-eliza-plugin` | [![npm](https://img.shields.io/npm/v/aetherguard-eliza-plugin?color=purple)](https://www.npmjs.com/package/aetherguard-eliza-plugin) |

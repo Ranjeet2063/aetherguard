@@ -5,6 +5,9 @@ authors.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
+description = "Mathematical Invariant Firewall & Financial OS Core for Autonomous AI Agents"
+readme = "../../README.md"
+documentation = "https://docs.rs/aetherguard-core"
 
 [dependencies]
 serde.workspace = true

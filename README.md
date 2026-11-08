@@ -30,6 +30,10 @@
 > 🛡️ **Formal STRIDE Security Specification**: [`STRIDE_THREAT_MODEL.md`](https://github.com/Ranjeet2063/aetherguard/blob/main/STRIDE_THREAT_MODEL.md)  
 > 🔗 **Verified Deployment Tx**: [`ad9926d29631e618357505778a56d3b472236cf26ea3994e202418cdd58ebc01`](https://stellar.expert/explorer/testnet/tx/ad9926d29631e618357505778a56d3b472236cf26ea3994e202418cdd58ebc01)
 
+<p align="center">
+  <img src="assets/aetherguard_demo.svg" alt="AetherGuard Live Terminal Simulation Demo" width="880"/>
+</p>
+
 ---
 
 ## ⚡ The Crisis: Why AI Agents Are Draining Crypto Wallets

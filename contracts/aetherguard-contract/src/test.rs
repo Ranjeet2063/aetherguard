@@ -9,7 +9,7 @@ fn test_successful_settlement_and_fee_routing() {
     let env = Env::default();
     env.mock_all_auths();
 
-    let contract_id = env.register_contract(None, AetherGuardContract);
+    let contract_id = env.register(AetherGuardContract, ());
     let client = AetherGuardContractClient::new(&env, &contract_id);
 
     let operator = Address::generate(&env);
@@ -44,7 +44,7 @@ fn test_micro_fee_calculation() {
     let env = Env::default();
     env.mock_all_auths();
 
-    let contract_id = env.register_contract(None, AetherGuardContract);
+    let contract_id = env.register(AetherGuardContract, ());
     let client = AetherGuardContractClient::new(&env, &contract_id);
 
     let operator = Address::generate(&env);
@@ -78,7 +78,7 @@ fn test_invariant_violation_single_spend_exceeded() {
     let env = Env::default();
     env.mock_all_auths();
 
-    let contract_id = env.register_contract(None, AetherGuardContract);
+    let contract_id = env.register(AetherGuardContract, ());
     let client = AetherGuardContractClient::new(&env, &contract_id);
 
     let operator = Address::generate(&env);
@@ -99,7 +99,7 @@ fn test_invariant_violation_balance_floor_breached() {
     let env = Env::default();
     env.mock_all_auths();
 
-    let contract_id = env.register_contract(None, AetherGuardContract);
+    let contract_id = env.register(AetherGuardContract, ());
     let client = AetherGuardContractClient::new(&env, &contract_id);
 
     let operator = Address::generate(&env);
@@ -120,7 +120,7 @@ fn test_invariant_violation_rolling_window_exceeded() {
     let env = Env::default();
     env.mock_all_auths();
 
-    let contract_id = env.register_contract(None, AetherGuardContract);
+    let contract_id = env.register(AetherGuardContract, ());
     let client = AetherGuardContractClient::new(&env, &contract_id);
 
     let operator = Address::generate(&env);
@@ -145,7 +145,7 @@ fn test_emergency_pause_halts_execution() {
     let env = Env::default();
     env.mock_all_auths();
 
-    let contract_id = env.register_contract(None, AetherGuardContract);
+    let contract_id = env.register(AetherGuardContract, ());
     let client = AetherGuardContractClient::new(&env, &contract_id);
 
     let operator = Address::generate(&env);

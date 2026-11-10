@@ -1,0 +1,19 @@
+# GitHub Linguist Language Override for Ranjeet2063/aetherguard
+# Primary language: Rust (core invariant firewall engine)
+# Python files are SDK client packages — marked as documentation/vendored
+
+# Mark Python SDK client package as vendored (excludes from primary language stats)
+packages/python/** linguist-vendored=true
+
+# Mark TypeScript SDK as documentation
+packages/sdk/** linguist-documentation=true
+
+# Mark MCP server TypeScript as generated
+packages/mcp-server/** linguist-generated=true
+
+# Explicitly mark Eliza plugin as generated
+packages/eliza-plugin/** linguist-generated=true
+
+# Core Rust source is the primary language
+contracts/** linguist-language=Rust
+src/** linguist-language=Rust

@@ -20,3 +20,8 @@ rand.workspace = true
 hex.workspace = true
 
 [dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "invariant_throughput"
+harness = false

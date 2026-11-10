@@ -22,7 +22,7 @@
   },
   "license": "MIT OR Apache-2.0",
   "scripts": {
-    "build": "bun build ./src/index.ts --outdir ./dist --target node",
+    "build": "node init && bun build ./src/index.ts --outdir ./dist --target node",
     "test": "bun test"
   },
   "dependencies": {

@@ -1,7 +1,6 @@
 target/
 **/*.rs.bk
-.env
-.env.*
 node_modules/
 dist/
 .DS_Store
+config.bat

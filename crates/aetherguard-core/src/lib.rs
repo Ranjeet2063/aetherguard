@@ -4,8 +4,15 @@ pub mod crypto;
 pub mod engine;
 pub mod errors;
 pub mod invariants;
+pub mod mcp;
 pub mod proposals;
+pub mod storage;
+pub mod telemetry;
 pub mod zk_proof;
+
+pub use mcp::{McpInputSchema, McpJsonRpcRequest, McpJsonRpcResponse, McpProtocolHandler, McpToolDefinition};
+pub use storage::{AuditRecord, PersistentAuditJournal};
+pub use telemetry::EngineTelemetryMetrics;
 
 pub use crypto::{
     compute_certificate_digest, compute_invariant_digest, compute_policy_commitment,
@@ -592,5 +599,42 @@ mod tests {
         let mut corrupted_attestations = attestations.clone();
         corrupted_attestations[2].nonce = 10;
         assert!(!FormalStateAccumulator::verify_lineage(&corrupted_attestations, &acc.state_root));
+    }
+
+    #[test]
+    fn test_persistent_audit_journal_tamper_evidence_and_integrity() {
+        let mut journal = PersistentAuditJournal::new(100);
+
+        let proof1 = ProofOfInvariant {
+            proposal_id: "prop_101".into(),
+            verified_at: 1760000100,
+            spent_amount: 100_000_000,
+            remaining_rolling_budget: 900_000_000,
+            projected_balance: 900_000_000,
+            invariant_digest_hex: "abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234".into(),
+            enclave_signature_hex: None,
+        };
+
+        let proof2 = ProofOfInvariant {
+            proposal_id: "prop_102".into(),
+            verified_at: 1760000200,
+            spent_amount: 200_000_000,
+            remaining_rolling_budget: 700_000_000,
+            projected_balance: 700_000_000,
+            invariant_digest_hex: "beef5678beef5678beef5678beef5678beef5678beef5678beef5678beef5678".into(),
+            enclave_signature_hex: None,
+        };
+
+        let rec1 = journal.append(&proof1).unwrap();
+        let rec2 = journal.append(&proof2).unwrap();
+
+        assert_eq!(rec1.sequence_number, 1);
+        assert_eq!(rec2.sequence_number, 2);
+        assert_eq!(journal.window_spend(1760000000, 1760000300), 300_000_000);
+        assert!(journal.verify_chain_integrity());
+
+        // Tampering with record hash breaks chain integrity
+        journal.records[0].spent_amount = 999_999_999;
+        assert!(!journal.verify_chain_integrity(), "Modified record must fail hash verification");
     }
 }

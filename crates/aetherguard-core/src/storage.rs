@@ -69,6 +69,14 @@ impl PersistentAuditJournal {
         }
     }
 
+    pub fn len(&self) -> usize {
+        self.records.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.records.is_empty()
+    }
+
     /// Append a verified proof to the journal, computing the tamper-evident hash chain.
     pub fn append(&mut self, proof: &ProofOfInvariant) -> Result<AuditRecord, AetherError> {
         let sequence_number = self.sequence_counter + 1;

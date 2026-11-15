@@ -1,5 +1,6 @@
 /* Authorized Protocol Quality Assurance & Formal Verification Engine */
 
+pub mod batch;
 pub mod crypto;
 pub mod engine;
 pub mod errors;
@@ -11,6 +12,7 @@ pub mod storage;
 pub mod telemetry;
 pub mod zk_proof;
 
+pub use batch::{evaluate_proposals_batch, BatchEvaluationResult};
 pub use mcp::{McpInputSchema, McpJsonRpcRequest, McpJsonRpcResponse, McpProtocolHandler, McpToolDefinition};
 pub use multisig::{MultiEnclaveAttestationCertificate, ThresholdQuorumPolicy};
 pub use storage::{AuditRecord, PersistentAuditJournal};
@@ -676,5 +678,45 @@ mod tests {
         };
 
         assert!(!policy.verify_quorum(&cert_underflow).unwrap());
+    }
+
+    #[test]
+    fn test_batch_evaluation_thread_scoped_execution() {
+        let policy = create_test_policy();
+        let vault = EnclaveKeyVault::generate();
+        let engine = AetherGuardEngine::new(policy, vault);
+
+        let p1 = AgentTransactionProposal::new(
+            "agent_a",
+            "Batch spend 1",
+            "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+            "swap_exact_tokens",
+            "GDQP2KPQGKIHYJGXNUIYOMHARUARCA7DJT5FO2FFOOKY3IF53Q7L5G6Z",
+            100_000_000,
+            "USDC",
+            1760000000,
+        );
+
+        let p2 = AgentTransactionProposal::new(
+            "agent_b",
+            "Excessive spend",
+            "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+            "swap_exact_tokens",
+            "GDQP2KPQGKIHYJGXNUIYOMHARUARCA7DJT5FO2FFOOKY3IF53Q7L5G6Z",
+            90_000_000_000, // 9,000 USDC (exceeds cap!)
+            "USDC",
+            1760000000,
+        );
+
+        let p2_id = p2.proposal_id.clone();
+        let proposals = vec![p1, p2];
+        let balances = vec![1_000_000_000, 100_000_000_000];
+
+        let batch_res = evaluate_proposals_batch(&engine, &proposals, &balances);
+
+        assert_eq!(batch_res.total_processed, 2);
+        assert_eq!(batch_res.passed_proofs.len(), 1);
+        assert_eq!(batch_res.failed_proposal_ids.len(), 1);
+        assert_eq!(batch_res.failed_proposal_ids[0].0, p2_id);
     }
 }

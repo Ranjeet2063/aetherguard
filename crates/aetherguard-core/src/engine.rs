@@ -16,6 +16,7 @@ struct SpendEvent {
 }
 
 /// The Central Firewall & Mathematical Invariant Evaluation Engine
+#[derive(Clone)]
 pub struct AetherGuardEngine {
     policy: InvariantPolicy,
     vault: EnclaveKeyVault,

@@ -7,6 +7,7 @@ use sha2::{Digest, Sha256};
 
 /// Hardware / In-Memory Signing Enclave ensuring zero-leak isolation.
 /// The raw private key is completely inaccessible to AI agents, prompt contexts, or external APIs.
+#[derive(Clone)]
 pub struct EnclaveKeyVault {
     signing_key: SigningKey,
     verifying_key: VerifyingKey,

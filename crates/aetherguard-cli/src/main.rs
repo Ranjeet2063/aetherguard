@@ -26,6 +26,13 @@ enum Commands {
     Demo,
     /// Inspect version and cryptographic status
     Status,
+    /// Output Anthropic Model Context Protocol (MCP) tool schema definitions for AI agents
+    Mcp,
+    /// Run high-throughput invariant verification micro-benchmark
+    Bench {
+        #[arg(short, long, default_value_t = 1000)]
+        iterations: usize,
+    },
 }
 
 fn main() {
@@ -34,6 +41,8 @@ fn main() {
     match cli.command {
         Commands::Demo => run_demo(),
         Commands::Status => run_status(),
+        Commands::Mcp => run_mcp(),
+        Commands::Bench { iterations } => run_bench(iterations),
     }
 }
 
@@ -174,5 +183,53 @@ fn run_demo() {
     println!("{}", "================================================================================".cyan());
     println!("  {} AetherGuard Formal Verification Engine is 100% Operational!", "✓".green().bold());
     println!("  {} Repository: https://github.com/Ranjeet2063/aetherguard", "★".yellow().bold());
+    println!("{}", "================================================================================".cyan());
+}
+
+fn run_mcp() {
+    let tool = aetherguard_core::McpProtocolHandler::get_verify_tool_definition();
+    println!("{}", serde_json::to_string_pretty(&tool).unwrap());
+}
+
+fn run_bench(iterations: usize) {
+    print_banner();
+    println!("  {}", format!("Running AetherGuard Micro-Benchmark: {} Iterations...", iterations).bold().white());
+
+    let policy = InvariantPolicy::builder()
+        .max_single_spend(1_000_000_000)
+        .max_rolling_window(500_000_000_000, 86400)
+        .min_balance_floor(100_000_000)
+        .allow_recipient("GDQP2KPQGKIHYJGXNUIYOMHARUARCA7DJT5FO2FFOOKY3IF53Q7L5G6Z")
+        .allow_contract("CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC")
+        .allow_function("swap_exact_tokens")
+        .build();
+
+    let vault = EnclaveKeyVault::generate();
+    let mut engine = AetherGuardEngine::new(policy, vault);
+
+    let proposal = AgentTransactionProposal::new(
+        "bench_agent",
+        "Benchmark transfer",
+        "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+        "swap_exact_tokens",
+        "GDQP2KPQGKIHYJGXNUIYOMHARUARCA7DJT5FO2FFOOKY3IF53Q7L5G6Z",
+        100_000_000,
+        "USDC",
+        1760000000,
+    );
+
+    let start = Instant::now();
+    for _ in 0..iterations {
+        let _ = engine.evaluate_and_prove(&proposal, 10_000_000_000);
+    }
+    let elapsed = start.elapsed();
+
+    let ops_per_sec = iterations as f64 / elapsed.as_secs_f64();
+    let avg_micros = elapsed.as_micros() as f64 / iterations as f64;
+
+    println!("  {} Total Evaluated:       {}", "[RESULT]".green().bold(), iterations);
+    println!("  {} Total Duration:        {:.2?}", "[RESULT]".green().bold(), elapsed);
+    println!("  {} Average Latency:       {:.2} µs/tx", "[RESULT]".green().bold(), avg_micros);
+    println!("  {} Throughput:            {} ops/sec", "[RESULT]".green().bold(), format!("{:.0}", ops_per_sec).bright_cyan().bold());
     println!("{}", "================================================================================".cyan());
 }

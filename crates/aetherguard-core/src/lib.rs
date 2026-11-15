@@ -5,12 +5,14 @@ pub mod engine;
 pub mod errors;
 pub mod invariants;
 pub mod mcp;
+pub mod multisig;
 pub mod proposals;
 pub mod storage;
 pub mod telemetry;
 pub mod zk_proof;
 
 pub use mcp::{McpInputSchema, McpJsonRpcRequest, McpJsonRpcResponse, McpProtocolHandler, McpToolDefinition};
+pub use multisig::{MultiEnclaveAttestationCertificate, ThresholdQuorumPolicy};
 pub use storage::{AuditRecord, PersistentAuditJournal};
 pub use telemetry::EngineTelemetryMetrics;
 
@@ -636,5 +638,43 @@ mod tests {
         // Tampering with record hash breaks chain integrity
         journal.records[0].spent_amount = 999_999_999;
         assert!(!journal.verify_chain_integrity(), "Modified record must fail hash verification");
+    }
+
+    #[test]
+    fn test_threshold_quorum_multisig_verification() {
+        let vault1 = EnclaveKeyVault::generate();
+        let vault2 = EnclaveKeyVault::generate();
+        let vault3 = EnclaveKeyVault::generate();
+
+        let pk1 = vault1.public_key_hex();
+        let pk2 = vault2.public_key_hex();
+        let pk3 = vault3.public_key_hex();
+
+        // 2-of-3 threshold policy
+        let policy = ThresholdQuorumPolicy::new(2, vec![pk1.clone(), pk2.clone(), pk3.clone()]);
+
+        let digest = "11223344556677889900aabbccddeeff11223344556677889900aabbccddeeff";
+        let digest_bytes = hex::decode(digest).unwrap();
+
+        let sig1 = hex::encode(vault1.sign_attestation(&digest_bytes));
+        let sig2 = hex::encode(vault2.sign_attestation(&digest_bytes));
+
+        // Certificate with 2 valid signatures passes 2-of-3 quorum
+        let cert = MultiEnclaveAttestationCertificate {
+            proposal_id: "multi_01".into(),
+            invariant_digest_hex: digest.into(),
+            signatures: vec![(pk1.clone(), sig1), (pk2.clone(), sig2)],
+        };
+
+        assert!(policy.verify_quorum(&cert).unwrap());
+
+        // Certificate with only 1 signature fails 2-of-3 quorum
+        let cert_underflow = MultiEnclaveAttestationCertificate {
+            proposal_id: "multi_02".into(),
+            invariant_digest_hex: digest.into(),
+            signatures: vec![(pk1, hex::encode(vault1.sign_attestation(&digest_bytes)))],
+        };
+
+        assert!(!policy.verify_quorum(&cert_underflow).unwrap());
     }
 }

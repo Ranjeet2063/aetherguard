@@ -54,4 +54,7 @@ pub enum AetherError {
 
     #[error("Mathematical Invariant Violation: Swap minimum output {min_amount_out} breaches required floor of {floor}")]
     OutputBelowFloor { min_amount_out: u128, floor: u128 },
+
+    #[error("Threshold Quorum Failure: {0}")]
+    ThresholdQuorumFailed(String),
 }

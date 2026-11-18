@@ -10,7 +10,7 @@
     "node-fetch": "^3.3.2"
   },
   "scripts": {
-    "build": "node init && bun --filter '*' run build",
+    "build": "bun --filter '*' run build",
     "test": "bun --filter '*' run test"
   }
 }
